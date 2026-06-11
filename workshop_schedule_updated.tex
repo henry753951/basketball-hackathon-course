@@ -1,0 +1,263 @@
+% !TeX program = xelatex
+% chktex-file 1
+% chktex-file 44
+% XeLaTeX-only version for Source Han Sans / Noto Sans CJK typography.
+\documentclass[11pt]{article}
+\usepackage[margin=0.85in]{geometry}
+
+\usepackage{iftex}
+\ifXeTeX
+\else
+\PackageError{main}{This document requires XeLaTeX}{Please compile with xelatex.}
+\fi
+\usepackage{fontspec}
+\usepackage{xeCJK}
+
+\setmainfont{TeX Gyre Heros}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{TeX Gyre Cursor}
+\setCJKmainfont{Noto Sans CJK TC}[UprightFont = *, BoldFont = * Bold, AutoFakeSlant = 0.15]
+\setCJKsansfont{Noto Sans CJK TC}[UprightFont = *, BoldFont = * Bold, AutoFakeSlant = 0.15]
+\setCJKmonofont{Noto Sans CJK TC}[UprightFont = *, BoldFont = * Bold, AutoFakeSlant = 0.15]
+\renewcommand{\CJKfamilydefault}{\CJKsfdefault}
+
+\usepackage{amsmath,amssymb}
+\usepackage{tikz-cd}
+\usepackage{multicol}
+\usepackage[table]{xcolor}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\usepackage[bookmarks=false,hidelinks]{hyperref}
+\renewcommand{\familydefault}{\sfdefault}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45\baselineskip}
+\renewcommand{\arraystretch}{1.18}
+\setlength{\tabcolsep}{4.8pt}
+\emergencystretch=2em
+\sloppy
+
+\definecolor{MainBlue}{HTML}{3A3A3A}
+\definecolor{DeepNavy}{HTML}{111111}
+\definecolor{AccentTeal}{HTML}{555555}
+\definecolor{AccentCoral}{HTML}{333333}
+\definecolor{LightBlue}{HTML}{F5F5F5}
+\definecolor{SoftGray}{HTML}{FAFAFA}
+\definecolor{DarkGray}{HTML}{333333}
+\definecolor{WarnYellow}{HTML}{EDEDED}
+
+\newcommand{\overviewitem}[4]{%
+  \noindent
+  \begin{minipage}[t]{0.12\textwidth}
+    \textbf{#1}\\[-0.5mm]
+    {\scriptsize #4}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.84\textwidth}
+    {\scriptsize\textbf{講義課：} #2}\\[-0.2mm]
+    {\scriptsize\textbf{實作：} #3}
+  \end{minipage}
+  \par\vspace{1.2mm}
+  \hrule
+  \vspace{1.2mm}
+}
+
+\tcbuselibrary{breakable}
+\newenvironment{projectfiles}{
+  \vspace{2.5mm}
+  \begin{tcolorbox}[colback=SoftGray,colframe=DarkGray,arc=1.5mm,boxrule=0.45pt,left=2.5mm,right=2.5mm,top=2mm,bottom=1.5mm,breakable]
+    {\normalsize\bfseries 當日工作坊專案檔案}\\[-0.2mm]
+    \begin{enumerate}[leftmargin=1.7em,itemsep=2pt,topsep=2pt,parsep=0pt]
+      }{
+    \end{enumerate}
+  \end{tcolorbox}
+}
+
+\titleformat{\section}{\Large\bfseries\color{MainBlue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\color{DarkGray}}{}{0pt}{}
+\renewcommand{\tabularxcolumn}[1]{m{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}m{#1}}
+\newcommand{\checkbox}{\(\square\)}
+\newcommand{\donebox}{\(\blacksquare\)}
+\newcommand{\typebadge}[1]{\colorbox{LightBlue}{\textcolor{MainBlue}{\scriptsize\bfseries\strut\ #1\ }}}
+\newcommand{\checks}[1]{\begin{itemize}[leftmargin=1.45em,itemsep=0pt,topsep=0pt,parsep=0pt,label=\(\square\)]#1\end{itemize}}
+\newcommand{\daybox}[2]{%
+  \begin{tcolorbox}[colback=SoftGray,colframe=DarkGray,arc=1mm,boxrule=0.45pt,left=2.5mm,right=2.5mm,top=2mm,bottom=2mm]
+    \textbf{核心目標：} #1
+
+    \vspace{1mm}
+    \textbf{當日產出：} #2
+  \end{tcolorbox}
+}
+\newcommand{\projectfile}[2]{\item {\ttfamily\small #1}\\[-0.3mm]{\footnotesize #2}}
+
+\begin{document}
+\newcommand{\tasktableheader}{%
+  \rowcolor{MainBlue}
+  \textcolor{white}{\textbf{完成}} &
+  \textcolor{white}{\textbf{編號}} &
+  \textcolor{white}{\textbf{類型}} &
+  \textcolor{white}{\textbf{任務內容}} &
+  \textcolor{white}{\textbf{審查方式}} &
+  \textcolor{white}{\textbf{分數}} \\ \hline
+}
+
+\begin{center}
+  {\Huge \textbf{Python「黑客松」實戰分析籃球運動數據}}\\[4pt]
+  {\Large 五天課程時間表與任務審查表}\\[10pt]
+  \rule{0.9\textwidth}{0.6pt}\\[8pt]
+  {\large \textcolor{DarkGray}{Colab｜Roboflow｜Homography｜Detection｜ByteTrack｜Pose｜Shooting Analysis}}
+\end{center}
+\vspace{2mm}
+
+\begin{tcolorbox}[colback=SoftGray,colframe=DarkGray,arc=1mm,boxrule=0.45pt,left=3mm,right=3mm,top=2mm,bottom=2mm]
+  {\large\bfseries 課程總覽}
+  \vspace{2mm}\hrule\vspace{1.5mm}
+
+  \overviewitem{Day 1}{Colab、影像座標、滑鼠點選工具、Homography 與 BEV projection。}{固定圖片與 BEV 圖座標配對、單點投影、Roboflow keypoint 與 bbox 作業準備。}{20 分}
+  \overviewitem{Day 2}{Object Detection、Bounding Box、confidence、bottom-center footpoint 與 BBOX-to-BEV。}{先用寫死框體驗，再用 sample / trained YOLO26 detection，最後把多個 player box 投影到 BEV。}{25 分}
+  \overviewitem{Day 3}{多目標追蹤、IoU 關聯、ByteTrack 概念、Track ID 與軌跡。}{將 detection boxes 接到 tracking，產生 ID、路徑，並映射到 2D 戰術板 / BEV 球場圖。}{20 分}
+  \overviewitem{Day 4}{近距離投籃視角、室外拍攝、MediaPipe pose、投籃角度與球軌跡。}{上傳或轉檔自己的投籃影片，輸出人體骨架、手肘 / 膝蓋角度與球軌跡觀察。}{15 分}
+  \overviewitem{Day 5}{投籃分析整合、結果圖表、限制討論與成果展示。}{整理 pose angle、ball tracking、release point 觀察，產出個人投籃分析報告與展示檔。}{20 分}
+
+  \noindent
+  \begin{minipage}[t]{0.12\textwidth}\textbf{加分}\\[-0.5mm]{\scriptsize +10}\end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.84\textwidth}{\scriptsize 改善 demo、補充失敗案例分析、調整視覺化、完成額外影片分析，或提交具體課程回饋。}\end{minipage}
+
+  \vspace{2mm}\hrule\vspace{1.5mm}
+  \hfill {\bfseries 總分：100 (+10)}
+\end{tcolorbox}
+
+\clearpage
+
+\section{Day 1｜Colab、座標點選、Homography 與資料標註準備}
+\daybox{讓學生先熟悉 Colab、課程資料夾與影像座標。課程不一開始綁完整籃球系統，而是先用固定圖片與 BEV 圖，透過滑鼠點選取得兩邊對應點，再用 Homography 體驗相機座標轉換到鳥瞰座標。最後介紹 Roboflow keypoint 與 bounding box 標註方式，讓學生準備 Day 2 會用到的少量資料。}{Colab 可正常執行、相機畫面座標點、BEV 對應點、Homography matrix、單點投影結果、keypoint / bbox 標註作業格式。}
+
+\vspace{1mm}
+\footnotesize
+\begin{tabularx}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\checkbox & 1.1 & \typebadge{環境} & 開啟課程 repo，確認 Colab、Google Drive、assets 與 src 路徑可正常讀取。 & \checks{\item Notebook 可成功顯示 COURSE\_ROOT 與 sample image} & 3 \\ \hline
+\checkbox & 1.2 & \typebadge{座標} & 使用座標點選工具在固定圖片上點選參考點，取得 image coordinate。 & \checks{\item 至少完成 4 個相機畫面參考點} & 4 \\ \hline
+\checkbox & 1.3 & \typebadge{BEV} & 在 BEV 圖上填入對應點，理解兩邊點位順序必須一致。 & \checks{\item 相機點與 BEV 點數量一致，且順序可解釋} & 3 \\ \hline
+\checkbox & 1.4 & \typebadge{轉換} & 使用 cv2.findHomography 計算矩陣，並指定一個點投影到 BEV。 & \checks{\item 可輸出 Homography matrix 與單點投影結果圖} & 5 \\ \hline
+\checkbox & 1.5 & \typebadge{標註} & 介紹 Roboflow keypoint 與 bbox 作業，學生練習標少量圖片。 & \checks{\item keypoint / bbox 作業格式確認完成} & 5 \\ \hline
+\rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 1 小計}} & \textbf{20} \\ \hline
+\end{tabularx}
+\normalsize
+\vspace{3mm}
+\begin{projectfiles}
+\projectfile{d1\_01\_colab\_and\_coordinate\_click\_tool.ipynb}{使用固定圖片與 HTML canvas 滑鼠點選工具，取得相機畫面座標。}
+\projectfile{d1\_02\_homography\_point\_projection.ipynb}{輸入相機點與 BEV 點，計算 Homography，並把指定點投影到 BEV。}
+\projectfile{d1\_03\_keypoint\_annotation\_roboflow\_lab.ipynb}{介紹 keypoint 標註順序、誤差檢查與之後可延伸的 training code。}
+\projectfile{d1\_04\_bbox\_homework\_setup.ipynb}{說明 player、ball、rim、number 等 bbox 類別與 Roboflow Dataset Version 作業。}
+\end{projectfiles}
+
+\clearpage
+\section{Day 2｜Detection Preview、YOLO26 與 BBOX-to-BEV}
+\daybox{讓學生理解 object detection 的輸出就是一組組 bounding boxes，而不是一開始就要求他們訓練完整模型。課程先用寫死的 player box 觀察 bottom-center footpoint，再用 sample detections 或老師提供的 trained YOLO26 model 看 detection 結果，最後把多個 player footpoints 投影到 BEV。}{單一 bbox-to-BEV 結果、detection preview 圖、training preview 概念、多人 BBOX-to-BEV 投影結果。}
+
+\vspace{1mm}\footnotesize
+\begin{tabularx}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\checkbox & 2.1 & \typebadge{框體} & 使用寫死的一個 player bbox，取 bottom-center 作為球員站在地板上的位置。 & \checks{\item 可畫出 player box 與 bottom-center 點} & 4 \\ \hline
+\checkbox & 2.2 & \typebadge{投影} & 沿用 Day 1 Homography，將單一 player footpoint 投影到 BEV。 & \checks{\item 可輸出左圖 bbox、右圖 BEV 點的 side-by-side 圖} & 5 \\ \hline
+\checkbox & 2.3 & \typebadge{偵測} & 使用 sample detections 或 trained YOLO26 / Ultralytics-style model 觀察 player、ball、rim、number 偵測結果。 & \checks{\item Notebook 可輸出 detection preview 圖} & 6 \\ \hline
+\checkbox & 2.4 & \typebadge{資料} & 檢查 Roboflow bbox dataset 與 training preview，理解 dataset、class、confidence 與模型限制。 & \checks{\item 能說明一個 detection 可能失敗的原因} & 4 \\ \hline
+\checkbox & 2.5 & \typebadge{整合} & 將多個 player bounding boxes 轉成 footpoints 並投影到 BEV。 & \checks{\item 可輸出多人 BBOX-to-BEV 結果圖} & 6 \\ \hline
+\rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 2 小計}} & \textbf{25} \\ \hline
+\end{tabularx}
+\normalsize
+\vspace{3mm}
+\begin{projectfiles}
+\projectfile{d2\_01\_manual\_detection\_box\_to\_bev.ipynb}{先用單一寫死 bbox 了解 bottom-center 與 BEV 投影。}
+\projectfile{d2\_02\_yolo26\_detection\_preview.ipynb}{若有權重就跑 YOLO26 / Ultralytics detection；否則使用 sample detections JSON。}
+\projectfile{d2\_03\_roboflow\_bbox\_training\_preview.ipynb}{保留 Roboflow dataset download 與 training code 骨架，課堂以 preview 為主。}
+\projectfile{d2\_04\_bbox\_to\_bev\_integration.ipynb}{將多個 detection boxes 的 footpoints 投影到 BEV。}
+\end{projectfiles}
+
+\clearpage
+\section{Day 3｜ByteTrack、多目標追蹤與位置數據化}
+\daybox{完成 Day 1 到 Day 3 的第一個篇章：從影像座標、Homography、Detection 到 Tracking。學生先用 IoU 理解跨 frame box 關聯，再體驗 ByteTrack / 簡化 tracker 的 Track ID，最後把每個 ID 的路徑畫到 BEV 戰術板上。}{IoU 關聯表、Track ID 結果圖、球員路徑資料、BEV 軌跡圖。}
+
+\vspace{1mm}\footnotesize
+\begin{tabularx}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\checkbox & 3.1 & \typebadge{概念} & 使用連續兩個 frames 的 boxes 計算 IoU，理解 box association。 & \checks{\item 可輸出 IoU matrix 並說明如何配對} & 4 \\ \hline
+\checkbox & 3.2 & \typebadge{追蹤} & 使用 ByteTrack 概念或簡化 tracker，將多個 frames 的 detections 賦予 Track ID。 & \checks{\item 可輸出含 Track ID 的 frame 圖} & 5 \\ \hline
+\checkbox & 3.3 & \typebadge{軌跡} & 整理每個 Track ID 的 center / footpoint 座標，形成球員路徑資料。 & \checks{\item 可輸出 tracks json 或 dataframe} & 4 \\ \hline
+\checkbox & 3.4 & \typebadge{BEV} & 將 track footpoints 投影到 BEV，畫出每個 ID 的移動路徑。 & \checks{\item 可輸出 BEV 軌跡圖} & 5 \\ \hline
+\checkbox & 3.5 & \typebadge{觀察} & 討論 Track ID 可能交換、消失或錯誤延續的情境。 & \checks{\item 能指出一個 tracking 限制} & 2 \\ \hline
+\rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 3 小計}} & \textbf{20} \\ \hline
+\end{tabularx}
+\normalsize
+\vspace{3mm}
+\begin{projectfiles}
+\projectfile{d3\_01\_tracking\_concept\_iou\_association.ipynb}{用 IoU matrix 了解 detection boxes 如何跨 frame 配對。}
+\projectfile{d3\_02\_bytetrack\_demo\_with\_sample\_boxes.ipynb}{用 sample boxes 體驗 Track ID 與追蹤結果圖。}
+\projectfile{d3\_03\_tracking\_to\_bev\_mini\_project.ipynb}{將 Track ID 路徑投影到 BEV，完成前三天整合。}
+\end{projectfiles}
+
+\clearpage
+\section{Day 4｜近距離投籃影片、人體姿態與球軌跡分析}
+\daybox{課程第二個篇章切換到近距離視角與室外實作。學生用手機拍攝投籃影片，上傳到 assets/raw 或貼上下載連結，由 Notebook 轉檔成 mp4。接著使用 MediaPipe 或合成資料體驗人體骨架偵測，計算手肘、膝蓋、肩膀角度，並用簡單顏色追蹤或 sample video 觀察球的路徑與出手點。}{轉檔後投籃影片、pose angle CSV、骨架示意圖、角度變化圖、球軌跡圖與出手點估計。}
+
+\vspace{1mm}\footnotesize
+\begin{tabularx}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\checkbox & 4.1 & \typebadge{上傳} & 將投籃影片上傳到 assets/raw，或貼上 Buzzheavier / 下載連結。 & \checks{\item raw 影片或下載檔案可被 Notebook 找到} & 3 \\ \hline
+\checkbox & 4.2 & \typebadge{轉檔} & 使用 ffmpeg 將影片統一轉成 mp4、30 FPS、最大邊 1280、移除音訊。 & \checks{\item assets/converted 中出現 mp4} & 3 \\ \hline
+\checkbox & 4.3 & \typebadge{Pose} & 使用 MediaPipe 或合成 pose 資料取得肩膀、手肘、手腕、髖、膝、踝位置。 & \checks{\item 可輸出 pose dataframe 或骨架圖} & 3 \\ \hline
+\checkbox & 4.4 & \typebadge{角度} & 計算 elbow angle、knee angle、shoulder angle，觀察投籃動作變化。 & \checks{\item 可輸出角度變化圖} & 3 \\ \hline
+\checkbox & 4.5 & \typebadge{球跡} & 使用簡單顏色追蹤或 sample ball video 取得球軌跡與簡易出手點估計。 & \checks{\item 可輸出球軌跡圖或 release frame} & 3 \\ \hline
+\rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 4 小計}} & \textbf{15} \\ \hline
+\end{tabularx}
+\normalsize
+\vspace{3mm}
+\begin{projectfiles}
+\projectfile{d4\_01\_upload\_and\_convert\_shooting\_video.ipynb}{整理學生影片上傳與 ffmpeg 統一轉檔流程。}
+\projectfile{d4\_02\_mediapipe\_pose\_angle\_lab.ipynb}{使用 MediaPipe 或合成資料計算投籃姿態角度。}
+\projectfile{d4\_03\_ball\_tracking\_and\_release\_point\_lab.ipynb}{用簡單球追蹤取得 ball path 與 release frame 觀察。}
+\end{projectfiles}
+
+\clearpage
+\section{Day 5｜投籃分析整合、報表與成果展示}
+\daybox{讓學生把 Day 4 的影片、pose angles 與 ball tracking 結果整理成一份小型個人投籃分析報告。課程重點不是判斷姿勢好壞，而是讓學生練習如何從影像取得資料、如何視覺化、如何說明限制與下一步改進。}{投籃分析 summary JSON、角度變化圖、球軌跡圖、骨架展示圖、showcase zip 與簡短成果展示。}
+
+\vspace{1mm}\footnotesize
+\begin{tabularx}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\checkbox & 5.1 & \typebadge{整合} & 讀取 Day 4 pose angle 與 ball track 結果，整理分析 summary。 & \checks{\item 可輸出 d5 shooting summary json} & 4 \\ \hline
+\checkbox & 5.2 & \typebadge{圖表} & 產生 elbow / knee / shoulder angle 變化圖。 & \checks{\item 可輸出 pose angle png} & 4 \\ \hline
+\checkbox & 5.3 & \typebadge{球跡} & 整理球軌跡圖，並標註或說明估計出手點。 & \checks{\item 可輸出 ball path png 或說明追蹤失敗原因} & 3 \\ \hline
+\checkbox & 5.4 & \typebadge{報告} & 選擇一張骨架示意圖或投籃關鍵 frame，作為展示圖。 & \checks{\item 可輸出 showcase skeleton 或關鍵 frame 圖} & 3 \\ \hline
+\checkbox & 5.5 & \typebadge{展示} & 匯出 showcase zip，並進行簡短成果展示。 & \checks{\item 展示影片 / 圖片 / 報告完成} & 4 \\ \hline
+\checkbox & 5.6 & \typebadge{反思} & 說明 AI 視覺分析的限制，例如遮擋、光線、視角、球太小、pose keypoint 不穩。 & \checks{\item 能指出至少一個限制與可能改進方向} & 2 \\ \hline
+\rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 5 小計}} & \textbf{20} \\ \hline
+\end{tabularx}
+\normalsize
+\vspace{3mm}
+\begin{projectfiles}
+\projectfile{d5\_01\_shooting\_analysis\_pipeline\_runner.ipynb}{讀取 Day 4 結果並產生投籃分析 summary。}
+\projectfile{d5\_02\_report\_visualization\_builder.ipynb}{整理角度圖、球軌跡圖與骨架展示圖。}
+\projectfile{d5\_03\_showcase\_export.ipynb}{將成果圖與 summary 匯出成展示用 zip。}
+\end{projectfiles}
+
+\clearpage
+\section{額外加分項目}
+\footnotesize
+\begin{tabularx}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\checkbox & E.1 & \typebadge{加分} & 嘗試改善任一 demo，例如手動修正 Homography 點、調整 ball threshold、補上自己的影片分析，或改善成果圖。 & \checks{\item 有額外修改，並能展示修改後結果} & +5 \\ \hline
+\checkbox & E.2 & \typebadge{回饋} & 提供課程回饋與改進建議，包含工具使用、任務難度、教材內容或未來想延伸的方向。 & \checks{\item 有提交具體回饋或建議} & +5 \\ \hline
+\rowcolor{WarnYellow}\multicolumn{5}{|r|}{\textbf{額外加分}} & \textbf{+10} \\ \hline
+\end{tabularx}
+\normalsize
+
+\end{document}

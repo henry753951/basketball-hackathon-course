@@ -1,0 +1,33 @@
+[project]
+name = "basketball-hackathon-course"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.10.9",
+    "mediapipe>=0.10.35",
+    "numpy>=2.4.6",
+    "opencv-python-headless>=4.13.0.92",
+    "pandas>=3.0.3",
+    "pillow>=12.2.0",
+    "requests>=2.34.2",
+    "supervision>=0.28.0",
+    "tqdm>=4.68.2",
+    "ultralytics>=8.4.63",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+    "nbclient>=0.11.0",
+    "pyright>=1.1.410",
+    "ruff>=0.15.16",
+]
+
+[tool.pyright]
+include = ["src"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

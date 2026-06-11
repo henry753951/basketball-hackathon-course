@@ -1,0 +1,10 @@
+numpy
+opencv-python-headless
+matplotlib
+pandas
+pillow
+tqdm
+requests
+ultralytics
+supervision
+mediapipe
