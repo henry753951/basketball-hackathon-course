@@ -119,20 +119,35 @@ def draw_points(
     radius: int = 7,
 ) -> np.ndarray:
     image = image_rgb.copy()
+    image_height, image_width = image.shape[:2]
     points = list(points)
     labels = list(labels) if labels is not None else [""] * len(points)
     for p, label in zip(points, labels):
         x, y = int(round(float(p[0]))), int(round(float(p[1])))
         cv2.circle(image, (x, y), radius, color, -1)
         if label:
+            text = str(label)
+            (text_width, text_height), baseline = cv2.getTextSize(
+                text,
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                2,
+            )
+            text_x = x + 8
+            if text_x + text_width > image_width - 8:
+                text_x = max(8, x - text_width - 8)
+            text_y = y - 8
+            if text_y - text_height < 8:
+                text_y = min(image_height - 8, y + text_height + baseline + 8)
             cv2.putText(
                 image,
-                str(label),
-                (x + 8, y - 8),
+                text,
+                (text_x, text_y),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.7,
                 color,
                 2,
+                cv2.LINE_AA,
             )
     return image
 
