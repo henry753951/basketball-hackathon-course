@@ -77,7 +77,7 @@ course/
 | 檔案 | 使用單元 | 說明 |
 | --- | --- | --- |
 | `sample_court_frame.png` | Day 1 - Day 3 | 球場相機視角範例圖，用於座標點選、Homography、Detection 與 Tracking 視覺化。 |
-| `sample_bev_court.json` | Day 1 - Day 3 | BEV 球場繪製規格；由 `src.geometry_utils.render_bev_court` 產生投影底圖。 |
+| `sample_bev_court.json` | Day 1 - Day 3 | Reference-style colorful BEV court template；由 `src.geometry_utils.render_bev_court` 產生投影底圖。 |
 
 完整使用位置請見 `assets/README.md`。
 

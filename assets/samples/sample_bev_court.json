@@ -1,75 +1,22 @@
 {
-  "description": "BEV court drawing specification. Coordinates are in pixel space.",
-  "canvas": {
-    "width": 940,
-    "height": 500,
-    "background_rgb": [248, 248, 248]
-  },
-  "style": {
-    "line_rgb": [40, 40, 40],
-    "line_thickness": 2
-  },
-  "polylines": [
-    {
-      "name": "outer_boundary",
-      "points": [[60, 60], [880, 60], [880, 440], [60, 440]],
-      "closed": true
-    },
-    {
-      "name": "center_line",
-      "points": [[470, 60], [470, 440]],
-      "closed": false
-    },
-    {
-      "name": "left_paint",
-      "points": [[60, 170], [220, 170], [220, 330], [60, 330]],
-      "closed": true
-    },
-    {
-      "name": "right_paint",
-      "points": [[880, 170], [720, 170], [720, 330], [880, 330]],
-      "closed": true
-    },
-    {
-      "name": "left_backboard",
-      "points": [[115, 205], [115, 295]],
-      "closed": false,
-      "thickness": 4
-    },
-    {
-      "name": "right_backboard",
-      "points": [[825, 205], [825, 295]],
-      "closed": false,
-      "thickness": 4
+  "description": "Reference-style colorful BEV court template derived from the Basketball-Tracking visualization flow.",
+  "template": {
+    "league": "nba",
+    "measurement_unit": "feet",
+    "scale": 20.0,
+    "padding": 50,
+    "line_thickness": 4,
+    "background_hex": "#0F172A",
+    "paint_fill_hex": "#1E293B",
+    "colors": {
+      "base": "#334155",
+      "outer": "#22D3EE",
+      "paint": "#F97316",
+      "lane": "#A855F7",
+      "center": "#FDE047",
+      "rim": "#FB7185",
+      "restricted": "#34D399",
+      "backboard": "#60A5FA"
     }
-  ],
-  "circles": [
-    {
-      "name": "center_circle",
-      "center": [470, 250],
-      "radius": 62
-    },
-    {
-      "name": "left_free_throw_circle",
-      "center": [220, 250],
-      "radius": 58
-    },
-    {
-      "name": "right_free_throw_circle",
-      "center": [720, 250],
-      "radius": 58
-    },
-    {
-      "name": "left_rim",
-      "center": [135, 250],
-      "radius": 10,
-      "thickness": 2
-    },
-    {
-      "name": "right_rim",
-      "center": [805, 250],
-      "radius": 10,
-      "thickness": 2
-    }
-  ]
+  }
 }

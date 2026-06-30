@@ -8,7 +8,15 @@ import cv2
 import numpy as np
 
 from .cv_utils import bottom_center, draw_boxes, draw_points, ensure_dir, load_json, save_json
-from .geometry_utils import project_points, render_bev_court
+from .geometry_utils import (
+    COURT_EDGES,
+    COURT_SPECIAL_SEGMENTS,
+    court_edge_color_rgb,
+    court_group_color_rgb,
+    court_template_bounds,
+    project_points,
+    render_bev_court,
+)
 
 BASKETBALL_CLASSES = [
     "ball",
@@ -313,6 +321,8 @@ def court_vertices_bev(bev_shape: tuple[int, int, int], league: str = "nba") -> 
 
 def bev_court_bounds(spec_path: str | Path) -> tuple[float, float, float, float]:
     spec = load_json(spec_path)
+    if spec.get("template") is not None:
+        return court_template_bounds(spec.get("template"))
     for item in spec.get("polylines", []):
         if item.get("name") == "outer_boundary":
             points = np.asarray(item["points"], dtype=np.float32)
@@ -495,21 +505,21 @@ def _draw_bev_players(
                 continue
             color = _track_color(tid)
             pts_int = np.asarray(pts, dtype=np.float32).round().astype(np.int32)
-            cv2.polylines(overlay, [pts_int.reshape(-1, 1, 2)], False, color, 3, cv2.LINE_AA)
-    canvas = cv2.addWeighted(overlay, 0.82, canvas, 0.18, 0)
+            cv2.polylines(overlay, [pts_int.reshape(-1, 1, 2)], False, color, 6, cv2.LINE_AA)
+    canvas = cv2.addWeighted(overlay, 0.2, canvas, 0.8, 0)
     for i, (point, label) in enumerate(zip(points_xy, labels)):
         x, y = int(round(float(point[0]))), int(round(float(point[1])))
         tid = int(label) if str(label).isdigit() else i
         color = _track_color(tid)
-        cv2.circle(canvas, (x, y), 11, (255, 255, 255), -1, cv2.LINE_AA)
-        cv2.circle(canvas, (x, y), 8, color, -1, cv2.LINE_AA)
+        cv2.circle(canvas, (x, y), 13, (255, 255, 255), -1, cv2.LINE_AA)
+        cv2.circle(canvas, (x, y), 10, color, -1, cv2.LINE_AA)
         cv2.putText(
             canvas,
             str(label),
             (x + 12, y - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.55,
-            (30, 30, 30),
+            (15, 23, 42),
             3,
             cv2.LINE_AA,
         )
@@ -519,7 +529,7 @@ def _draw_bev_players(
             (x + 12, y - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.55,
-            color,
+            (255, 255, 255),
             1,
             cv2.LINE_AA,
         )
@@ -545,17 +555,44 @@ def _draw_keypoints_overlay(
     keypoints: Sequence[CourtKeypointRecord],
 ) -> np.ndarray:
     image = image_rgb.copy()
+    points_by_index = {kp.index: kp for kp in keypoints}
+    for edge_index, (start_idx, end_idx) in enumerate(COURT_EDGES):
+        start = points_by_index.get(start_idx)
+        end = points_by_index.get(end_idx)
+        if start is None or end is None:
+            continue
+        cv2.line(
+            image,
+            (int(round(start.image_xy[0])), int(round(start.image_xy[1]))),
+            (int(round(end.image_xy[0])), int(round(end.image_xy[1]))),
+            court_edge_color_rgb(edge_index),
+            3,
+            cv2.LINE_AA,
+        )
+    for group_name, (start_idx, end_idx) in COURT_SPECIAL_SEGMENTS:
+        start = points_by_index.get(start_idx)
+        end = points_by_index.get(end_idx)
+        if start is None or end is None:
+            continue
+        cv2.line(
+            image,
+            (int(round(start.image_xy[0])), int(round(start.image_xy[1]))),
+            (int(round(end.image_xy[0])), int(round(end.image_xy[1]))),
+            court_group_color_rgb(group_name),
+            3,
+            cv2.LINE_AA,
+        )
     for kp in keypoints:
         x, y = int(round(kp.image_xy[0])), int(round(kp.image_xy[1]))
         cv2.circle(image, (x, y), 7, (255, 255, 255), -1, cv2.LINE_AA)
-        cv2.circle(image, (x, y), 5, (46, 204, 113), -1, cv2.LINE_AA)
+        cv2.circle(image, (x, y), 7, (51, 65, 85), 2, cv2.LINE_AA)
         cv2.putText(
             image,
             kp.label,
             (x + 8, y - 8),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.5,
-            (255, 255, 255),
+            (15, 23, 42),
             3,
             cv2.LINE_AA,
         )
@@ -565,11 +602,109 @@ def _draw_keypoints_overlay(
             (x + 8, y - 8),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.5,
-            (46, 204, 113),
+            (255, 255, 255),
             1,
             cv2.LINE_AA,
         )
     return image
+
+
+def _draw_bev_keypoints(
+    bev_rgb: np.ndarray,
+    keypoints: Sequence[CourtKeypointRecord],
+) -> np.ndarray:
+    canvas = bev_rgb.copy()
+    for kp in keypoints:
+        x, y = int(round(kp.bev_xy[0])), int(round(kp.bev_xy[1]))
+        cv2.circle(canvas, (x, y), 10, (255, 255, 255), -1, cv2.LINE_AA)
+        cv2.circle(canvas, (x, y), 7, (15, 23, 42), -1, cv2.LINE_AA)
+        cv2.putText(
+            canvas,
+            kp.label,
+            (x + 10, y - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (15, 23, 42),
+            3,
+            cv2.LINE_AA,
+        )
+        cv2.putText(
+            canvas,
+            kp.label,
+            (x + 10, y - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.5,
+            (255, 255, 255),
+            1,
+            cv2.LINE_AA,
+        )
+    return canvas
+
+
+def write_court_keypoint_preview_video(
+    *,
+    video_path: str | Path,
+    model_path: str | Path,
+    bev_spec_path: str | Path,
+    output_path: str | Path,
+    max_frames: int = 45,
+    conf: float = 0.25,
+    anchor_confidence: float = 0.35,
+    imgsz: int = 960,
+    start_frame: int = 0,
+) -> tuple[Path, list[dict[str, Any]]]:
+    model = load_yolo_model(model_path)
+    bev_base = render_bev_court(bev_spec_path)
+    court_bounds = bev_court_bounds(bev_spec_path)
+    cap = cv2.VideoCapture(str(video_path))
+    if not cap.isOpened():
+        raise FileNotFoundError(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    output_path = Path(output_path)
+    ensure_dir(output_path.parent)
+    writer = cv2.VideoWriter(
+        str(output_path),
+        mp4_fourcc(),
+        fps,
+        (frame_width * 2, frame_height),
+    )
+    rows: list[dict[str, Any]] = []
+    cap.set(cv2.CAP_PROP_POS_FRAMES, int(start_frame))
+    local_frame_index = 0
+    while local_frame_index < max_frames:
+        ok, frame_bgr = cap.read()
+        if not ok:
+            break
+        frame_index = start_frame + local_frame_index
+        frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        result = model.predict(frame_rgb, conf=conf, imgsz=imgsz, verbose=False)[0]
+        keypoints = court_keypoints_from_result(
+            result,
+            bev_base.shape,
+            frame_index=frame_index,
+            anchor_confidence=anchor_confidence,
+            court_bounds=court_bounds,
+        )
+        H = estimate_homography_from_keypoints(keypoints)
+        frame_vis = _draw_keypoints_overlay(rgb_from_ultralytics_plot(result), keypoints)
+        bev_vis = _draw_bev_keypoints(bev_base, keypoints)
+        bev_vis = cv2.resize(bev_vis, (frame_width, frame_height))
+        writer.write(cv2.cvtColor(np.hstack([frame_vis, bev_vis]), cv2.COLOR_RGB2BGR))
+        rows.append(
+            {
+                "frame": frame_index,
+                "keypoint_count": len(keypoints),
+                "homography_estimated": H is not None,
+                "keypoints": records_to_dicts(keypoints),
+            }
+        )
+        local_frame_index += 1
+    cap.release()
+    writer.release()
+    save_json(rows, output_path.with_suffix(".json"))
+    return output_path, rows
 
 
 def write_detector_keypoint_bev_video(
