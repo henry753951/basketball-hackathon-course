@@ -3,7 +3,7 @@ from __future__ import annotations
 import base64
 import json
 from pathlib import Path
-from typing import Sequence
+from typing import Any, Sequence
 
 from IPython.display import HTML, display
 
@@ -23,7 +23,7 @@ def show_click_tool(
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
       <h3 style="margin-bottom: 8px;">{title}</h3>
       <p style="margin: 0 0 8px 0;">
-        點選影像中的參考點；下方會即時列出座標。請依照課堂指定順序點選。
+        點選影像中的參考點；下方會即時列出原始影像座標。
       </p>
       <canvas id="{canvas_id}" style="border:1px solid #999; max-width:100%;"></canvas>
       <p style="margin: 8px 0 4px 0;">已記錄座標：</p>
@@ -71,8 +71,8 @@ def show_click_tool(
         const rect = canvas.getBoundingClientRect();
         const sx = event.clientX - rect.left;
         const sy = event.clientY - rect.top;
-        const x = Math.round(sx * img.width / canvas.width);
-        const y = Math.round(sy * img.height / canvas.height);
+        const x = Math.round(sx * img.width / rect.width);
+        const y = Math.round(sy * img.height / rect.height);
         points.push([x, y]);
         redraw();
       }});
@@ -81,6 +81,202 @@ def show_click_tool(
         points.length = 0;
         redraw();
       }};
+    }})();
+    </script>
+    """
+    display(HTML(html))
+
+
+def show_court_keypoint_pair_tool(
+    bev_image_path: str | Path,
+    camera_image_path: str | Path,
+    keypoints: Sequence[dict[str, Any]],
+    canvas_width: int = 1000,
+    title: str = "Court Keypoint Pairing Tool",
+) -> None:
+    """顯示上方 BEV keypoint、下方 camera frame 的配對標定工具。"""
+    bev_image_path = Path(bev_image_path)
+    camera_image_path = Path(camera_image_path)
+    bev_b64 = base64.b64encode(bev_image_path.read_bytes()).decode("utf-8")
+    camera_b64 = base64.b64encode(camera_image_path.read_bytes()).decode("utf-8")
+    base_id = f"{bev_image_path.stem}_{camera_image_path.stem}".replace("-", "_")
+    bev_canvas_id = f"pair_bev_{base_id}"
+    camera_canvas_id = f"pair_camera_{base_id}"
+    output_id = f"pair_output_{base_id}"
+    status_id = f"pair_status_{base_id}"
+    keypoints_json = json.dumps(
+        [
+            {
+                "name": str(item["name"]),
+                "xy": [float(item["xy"][0]), float(item["xy"][1])],
+            }
+            for item in keypoints
+        ],
+        ensure_ascii=False,
+    )
+
+    html = f"""
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+      <h3 style="margin: 0 0 8px 0;">{title}</h3>
+      <p style="margin: 0 0 10px 0;">
+        先在上方 BEV 選擇一個 keypoint，再在下方相機畫面點選對應位置。至少建立四組 pair 後即可估計 Homography。
+      </p>
+      <div id="{status_id}" style="margin: 0 0 8px 0; font-weight: 600;"></div>
+      <canvas id="{bev_canvas_id}" style="border:1px solid #999; max-width:100%; display:block; margin-bottom:12px;"></canvas>
+      <canvas id="{camera_canvas_id}" style="border:1px solid #999; max-width:100%; display:block;"></canvas>
+      <p style="margin: 8px 0 4px 0;">pairs JSON：</p>
+      <textarea id="{output_id}" rows="10" style="width:100%; font-family:monospace;"></textarea>
+      <br />
+      <button onclick="window.clear_{base_id}()" style="margin-top: 8px;">清除 pairs</button>
+    </div>
+    <script>
+    (function() {{
+      const bevImg = new Image();
+      const camImg = new Image();
+      const bevCanvas = document.getElementById("{bev_canvas_id}");
+      const camCanvas = document.getElementById("{camera_canvas_id}");
+      const bctx = bevCanvas.getContext("2d");
+      const cctx = camCanvas.getContext("2d");
+      const output = document.getElementById("{output_id}");
+      const status = document.getElementById("{status_id}");
+      const keypoints = {keypoints_json};
+      const pairs = [];
+      let selected = null;
+      let imagesReady = 0;
+
+      function eventToImage(canvas, img, event) {{
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.round((event.clientX - rect.left) * img.width / rect.width);
+        const y = Math.round((event.clientY - rect.top) * img.height / rect.height);
+        return [x, y];
+      }}
+
+      function imageToCanvas(canvas, img, point) {{
+        return [
+          point[0] * canvas.width / img.width,
+          point[1] * canvas.height / img.height
+        ];
+      }}
+
+      function nearestKeypoint(point) {{
+        let best = null;
+        let bestDist = Infinity;
+        for (const kp of keypoints) {{
+          const dx = kp.xy[0] - point[0];
+          const dy = kp.xy[1] - point[1];
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < bestDist) {{
+            best = kp;
+            bestDist = dist;
+          }}
+        }}
+        return bestDist <= 35 ? best : null;
+      }}
+
+      function drawLabel(ctx, text, x, y, color) {{
+        ctx.font = "13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "rgba(255,255,255,0.95)";
+        ctx.strokeText(text, x, y);
+        ctx.fillStyle = color;
+        ctx.fillText(text, x, y);
+      }}
+
+      function redrawBev() {{
+        bctx.drawImage(bevImg, 0, 0, bevCanvas.width, bevCanvas.height);
+        for (const kp of keypoints) {{
+          const p = imageToCanvas(bevCanvas, bevImg, kp.xy);
+          const alreadyPaired = pairs.some(pair => pair.keypoint_name === kp.name);
+          const isSelected = selected && selected.name === kp.name;
+          const color = isSelected ? "rgb(255,80,80)" : (alreadyPaired ? "rgb(46,204,113)" : "rgb(70,120,220)");
+          bctx.beginPath();
+          bctx.arc(p[0], p[1], isSelected ? 7 : 5, 0, Math.PI * 2);
+          bctx.fillStyle = color;
+          bctx.fill();
+          drawLabel(bctx, kp.name, p[0] + 8, p[1] - 8, color);
+        }}
+      }}
+
+      function redrawCamera() {{
+        cctx.drawImage(camImg, 0, 0, camCanvas.width, camCanvas.height);
+        for (const pair of pairs) {{
+          const p = imageToCanvas(camCanvas, camImg, pair.camera_xy);
+          cctx.beginPath();
+          cctx.arc(p[0], p[1], 6, 0, Math.PI * 2);
+          cctx.fillStyle = "rgb(255,80,80)";
+          cctx.fill();
+          drawLabel(cctx, pair.keypoint_name, p[0] + 8, p[1] - 8, "rgb(255,80,80)");
+        }}
+      }}
+
+      function updateOutput() {{
+        const data = {{
+          pairs: pairs,
+          camera_points: pairs.map(pair => pair.camera_xy),
+          bev_points: pairs.map(pair => pair.bev_xy)
+        }};
+        output.value = JSON.stringify(data, null, 2);
+        const pending = selected ? `selected: ${{selected.name}}` : "select a BEV keypoint";
+        status.textContent = `${{pairs.length}} pair(s). ${{pending}}`;
+      }}
+
+      function redraw() {{
+        redrawBev();
+        redrawCamera();
+        updateOutput();
+      }}
+
+      function setupCanvas(canvas, img) {{
+        const scale = Math.min(1, {canvas_width} / img.width);
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+      }}
+
+      function maybeInit() {{
+        imagesReady += 1;
+        if (imagesReady !== 2) return;
+        setupCanvas(bevCanvas, bevImg);
+        setupCanvas(camCanvas, camImg);
+        redraw();
+      }}
+
+      bevCanvas.addEventListener("click", function(event) {{
+        const point = eventToImage(bevCanvas, bevImg, event);
+        selected = nearestKeypoint(point);
+        redraw();
+      }});
+
+      camCanvas.addEventListener("click", function(event) {{
+        if (!selected) {{
+          status.textContent = "select a BEV keypoint first";
+          return;
+        }}
+        const cameraPoint = eventToImage(camCanvas, camImg, event);
+        const existingIndex = pairs.findIndex(pair => pair.keypoint_name === selected.name);
+        const pair = {{
+          keypoint_name: selected.name,
+          bev_xy: selected.xy.map(v => Number(v.toFixed(2))),
+          camera_xy: cameraPoint
+        }};
+        if (existingIndex >= 0) {{
+          pairs[existingIndex] = pair;
+        }} else {{
+          pairs.push(pair);
+        }}
+        selected = null;
+        redraw();
+      }});
+
+      window.clear_{base_id} = function() {{
+        pairs.length = 0;
+        selected = null;
+        redraw();
+      }};
+
+      bevImg.onload = maybeInit;
+      camImg.onload = maybeInit;
+      bevImg.src = "data:image/png;base64,{bev_b64}";
+      camImg.src = "data:image/png;base64,{camera_b64}";
     }})();
     </script>
     """

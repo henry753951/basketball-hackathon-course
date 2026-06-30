@@ -1,12 +1,65 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, TypedDict
 
 import cv2
 import numpy as np
 
 from .cv_utils import load_json, read_image_rgb, draw_points, save_image_rgb
+
+
+class HomographyPair(TypedDict):
+    keypoint_name: str
+    camera_xy: list[float]
+    bev_xy: list[float]
+
+
+DEFAULT_HOMOGRAPHY_PAIRS: list[HomographyPair] = [
+    {
+        "keypoint_name": "sample_right_lane_top_left",
+        "camera_xy": [818.0, 480.0],
+        "bev_xy": [620.0, 180.0],
+    },
+    {
+        "keypoint_name": "sample_right_lane_top_right",
+        "camera_xy": [1216.0, 453.0],
+        "bev_xy": [820.0, 180.0],
+    },
+    {
+        "keypoint_name": "sample_right_lane_bottom_right",
+        "camera_xy": [1410.0, 657.0],
+        "bev_xy": [820.0, 350.0],
+    },
+    {
+        "keypoint_name": "sample_right_lane_bottom_left",
+        "camera_xy": [672.0, 623.0],
+        "bev_xy": [620.0, 350.0],
+    },
+    {
+        "keypoint_name": "sample_right_sideline_top_left",
+        "camera_xy": [674.0, 423.0],
+        "bev_xy": [620.0, 90.0],
+    },
+    {
+        "keypoint_name": "sample_right_sideline_top_right",
+        "camera_xy": [1434.0, 424.0],
+        "bev_xy": [820.0, 90.0],
+    },
+]
+
+DEFAULT_SAMPLE_PLAYER_BBOX_XYXY: list[float] = [545.8197, 469.2618, 627.8652, 714.5692]
+
+
+def default_homography_pairs() -> list[HomographyPair]:
+    return [
+        {
+            "keypoint_name": pair["keypoint_name"],
+            "camera_xy": pair["camera_xy"].copy(),
+            "bev_xy": pair["bev_xy"].copy(),
+        }
+        for pair in DEFAULT_HOMOGRAPHY_PAIRS
+    ]
 
 
 def compute_homography(
@@ -69,15 +122,6 @@ def render_bev_court(spec_path: str | Path) -> np.ndarray:
         )
 
     return image
-
-
-def load_sample_homography(course_root: str | Path):
-    course_root = Path(course_root)
-    data = load_json(
-        course_root / "assets" / "samples" / "sample_homography_points.json"
-    )
-    H = compute_homography(data["camera_points"], data["bev_points"])
-    return H, data
 
 
 def draw_projection_pair(

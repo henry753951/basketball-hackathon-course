@@ -119,7 +119,7 @@
   {\large\bfseries 課程總覽}
   \vspace{2mm}\hrule\vspace{1.5mm}
 
-  \overviewitem{Day 1}{Colab、影像座標、滑鼠點選工具、Homography 與 BEV projection。}{固定圖片與 BEV 圖座標配對、單點投影、Roboflow keypoint 與 bbox 作業準備。}{20 分}
+\overviewitem{Day 1}{Colab、影像座標、keypoint 配對、Homography 與 BEV projection。}{固定圖片與 BEV 圖 keypoint 配對、單點投影、Roboflow keypoint 與 bbox 作業準備。}{20 分}
   \overviewitem{Day 2}{Object Detection、Bounding Box、confidence、bottom-center footpoint 與 BBOX-to-BEV。}{先用寫死框體驗，再用 sample / trained YOLO26 detection，最後把多個 player box 投影到 BEV。}{25 分}
   \overviewitem{Day 3}{多目標追蹤、IoU 關聯、ByteTrack 概念、Track ID 與軌跡。}{將 detection boxes 接到 tracking，產生 ID、路徑，並映射到 2D 戰術板 / BEV 球場圖。}{20 分}
   \overviewitem{Day 4}{近距離投籃視角、室外拍攝、MediaPipe pose、投籃角度與球軌跡。}{上傳或轉檔自己的投籃影片，輸出人體骨架、手肘 / 膝蓋角度與球軌跡觀察。}{15 分}
@@ -136,16 +136,16 @@
 
 \clearpage
 
-\section{Day 1｜Colab、座標點選、Homography 與資料標註準備}
-\daybox{讓學生先熟悉 Colab、課程資料夾與影像座標。課程不一開始綁完整籃球系統，而是先用固定圖片與 BEV 圖，透過滑鼠點選取得兩邊對應點，再用 Homography 體驗相機座標轉換到鳥瞰座標。最後介紹 Roboflow keypoint 與 bounding box 標註方式，讓學生準備 Day 2 會用到的少量資料。}{Colab 可正常執行、相機畫面座標點、BEV 對應點、Homography matrix、單點投影結果、keypoint / bbox 標註作業格式。}
+\section{Day 1｜Colab、Keypoint 配對、Homography 與資料標註準備}
+\daybox{讓學生熟悉 Colab、課程資料夾與影像座標。課程以固定圖片與 BEV 圖建立 keypoint 對應關係，再用 Homography 將相機座標轉換到鳥瞰座標。最後介紹 Roboflow keypoint 與 bounding box 標註方式，讓學生準備 Day 2 會用到的少量資料。}{Colab 可正常執行、相機畫面座標點、BEV 對應點、Homography matrix、單點投影結果、keypoint / bbox 標註作業格式。}
 
 \vspace{1mm}
 \footnotesize
 \begin{tabularx}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
 \tasktableheader
 \checkbox & 1.1 & \typebadge{環境} & 開啟課程 repo，確認 Colab、Google Drive、assets 與 src 路徑可正常讀取。 & \checks{\item Notebook 可成功顯示 COURSE\_ROOT 與 sample image} & 3 \\ \hline
-\checkbox & 1.2 & \typebadge{座標} & 使用座標點選工具在固定圖片上點選參考點，取得 image coordinate。 & \checks{\item 至少完成 4 個相機畫面參考點} & 4 \\ \hline
-\checkbox & 1.3 & \typebadge{BEV} & 在 BEV 圖上填入對應點，理解兩邊點位順序必須一致。 & \checks{\item 相機點與 BEV 點數量一致，且順序可解釋} & 3 \\ \hline
+\checkbox & 1.2 & \typebadge{座標} & 使用 BEV / camera keypoint 配對工具建立對應點。 & \checks{\item 至少完成 4 組 keypoint pair} & 4 \\ \hline
+\checkbox & 1.3 & \typebadge{BEV} & 檢查每一組 pair 的 BEV keypoint 名稱與相機畫面位置。 & \checks{\item 相機點與 BEV 點數量一致，且 pair 名稱可解釋} & 3 \\ \hline
 \checkbox & 1.4 & \typebadge{轉換} & 使用 cv2.findHomography 計算矩陣，並指定一個點投影到 BEV。 & \checks{\item 可輸出 Homography matrix 與單點投影結果圖} & 5 \\ \hline
 \checkbox & 1.5 & \typebadge{標註} & 介紹 Roboflow keypoint 與 bbox 作業，學生練習標少量圖片。 & \checks{\item keypoint / bbox 作業格式確認完成} & 5 \\ \hline
 \rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 1 小計}} & \textbf{20} \\ \hline
@@ -153,8 +153,7 @@
 \normalsize
 \vspace{3mm}
 \begin{projectfiles}
-\projectfile{day1/d1\_01\_colab\_and\_coordinate\_click\_tool.ipynb}{使用固定圖片與 HTML canvas 滑鼠點選工具，取得相機畫面座標。}
-\projectfile{day1/d1\_02\_homography\_point\_projection.ipynb}{輸入相機點與 BEV 點，計算 Homography，並把指定點投影到 BEV。}
+\projectfile{day1/d1\_01\_keypoint\_pairing\_homography.ipynb}{使用 BEV / camera keypoint 配對工具建立對應點，計算 Homography，並把指定點投影到 BEV。}
 \projectfile{day1/d1\_03\_keypoint\_annotation\_roboflow\_lab.ipynb}{介紹 keypoint 標註順序、誤差檢查與之後可延伸的 training code。}
 \projectfile{day1/d1\_04\_bbox\_homework\_setup.ipynb}{說明 player、ball、rim、number 等 bbox 類別與 Roboflow Dataset Version 作業。}
 \end{projectfiles}

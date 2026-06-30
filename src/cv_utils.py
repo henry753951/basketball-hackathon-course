@@ -5,8 +5,34 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 import cv2
+from matplotlib import font_manager
 import matplotlib.pyplot as plt
 import numpy as np
+
+_MATPLOTLIB_FONT_CONFIGURED = False
+
+
+def configure_matplotlib_fonts() -> None:
+    """Use a CJK-capable font when the runtime provides one."""
+    global _MATPLOTLIB_FONT_CONFIGURED
+    if _MATPLOTLIB_FONT_CONFIGURED:
+        return
+    preferred_fonts = [
+        "Microsoft JhengHei",
+        "Noto Sans CJK TC",
+        "Noto Sans CJK JP",
+        "Noto Sans CJK SC",
+        "Microsoft YaHei",
+        "SimHei",
+        "Arial Unicode MS",
+    ]
+    available_fonts = {font.name for font in font_manager.fontManager.ttflist}
+    for font_name in preferred_fonts:
+        if font_name in available_fonts:
+            plt.rcParams["font.family"] = font_name
+            break
+    plt.rcParams["axes.unicode_minus"] = False
+    _MATPLOTLIB_FONT_CONFIGURED = True
 
 
 def ensure_dir(path: str | Path) -> Path:
@@ -43,6 +69,7 @@ def save_image_rgb(path: str | Path, image_rgb: np.ndarray) -> Path:
 def show_image(
     image_rgb: np.ndarray, title: str | None = None, figsize=(10, 6)
 ) -> None:
+    configure_matplotlib_fonts()
     plt.figure(figsize=figsize)
     plt.imshow(image_rgb)
     if title:

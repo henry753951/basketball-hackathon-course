@@ -1,5 +1,5 @@
 {
-  "description": "BEV court drawing specification. Coordinates are in pixel space and match the sample_homography_points.json target coordinates.",
+  "description": "BEV court drawing specification. Coordinates are in pixel space.",
   "canvas": {
     "width": 940,
     "height": 500,

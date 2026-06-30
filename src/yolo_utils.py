@@ -59,6 +59,44 @@ COURT_LABELS = [
     "41",
 ]
 
+COURT_KEYPOINT_DISPLAY_NAMES = [
+    "left_baseline_top",
+    "left_corner_three_top",
+    "left_paint_baseline_top",
+    "left_paint_baseline_bottom",
+    "left_corner_three_bottom",
+    "left_baseline_bottom",
+    "left_rim",
+    "left_wing_three_top",
+    "left_wing_three_bottom",
+    "left_paint_ft_top",
+    "left_free_throw",
+    "left_paint_ft_bottom",
+    "left_throw_line_top",
+    "left_arc_apex",
+    "left_throw_line_bottom",
+    "midcourt_top",
+    "center_court",
+    "midcourt_bottom",
+    "right_throw_line_top",
+    "right_arc_apex",
+    "right_throw_line_bottom",
+    "right_paint_ft_top",
+    "right_free_throw",
+    "right_paint_ft_bottom",
+    "right_wing_three_top",
+    "right_wing_three_bottom",
+    "right_rim",
+    "right_baseline_top",
+    "right_corner_three_top",
+    "right_paint_baseline_top",
+    "right_paint_baseline_bottom",
+    "right_corner_three_bottom",
+    "right_baseline_bottom",
+]
+
+COURT_KEYPOINT_NAME_BY_LABEL = dict(zip(COURT_LABELS, COURT_KEYPOINT_DISPLAY_NAMES))
+
 PLAYER_CLASS_NAMES = {
     "player",
     "player-in-possession",
@@ -66,6 +104,10 @@ PLAYER_CLASS_NAMES = {
     "player-layup-dunk",
     "player-shot-block",
 }
+
+
+def display_keypoint_name(label: str) -> str:
+    return COURT_KEYPOINT_NAME_BY_LABEL.get(str(label), str(label))
 
 
 @dataclass(frozen=True)
@@ -327,7 +369,7 @@ def court_keypoints_from_result(
             CourtKeypointRecord(
                 frame_index=frame_index,
                 index=index,
-                label=COURT_LABELS[index],
+                label=display_keypoint_name(COURT_LABELS[index]),
                 confidence=confidence,
                 image_xy=[float(point[0]), float(point[1])],
                 bev_xy=[float(vertices[index, 0]), float(vertices[index, 1])],

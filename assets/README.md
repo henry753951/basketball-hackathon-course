@@ -18,9 +18,8 @@
 
 | 檔案 | 說明 | 使用 Notebook |
 | --- | --- | --- |
-| `sample_court_frame.png` | 球場相機視角範例圖；用於座標點選、Homography 與 Day 2-01 BBOX-to-BEV 互動。 | `day1/d1_01_colab_and_coordinate_click_tool.ipynb`、`day1/d1_02_homography_point_projection.ipynb`、`day2/d2_01_manual_detection_box_to_bev.ipynb` |
-| `sample_bev_court.json` | BEV 球場繪製規格；由 `src.geometry_utils.render_bev_court` 產生投影底圖。 | `day1/d1_02_homography_point_projection.ipynb`、`day1/d1_03_keypoint_annotation_roboflow_lab.ipynb`、`day2/d2_01_manual_detection_box_to_bev.ipynb`、`day2/d2_04_bbox_to_bev_integration.ipynb`、`day3/d3_03_tracking_to_bev_mini_project.ipynb` |
-| `sample_homography_points.json` | 相機座標與 BEV 座標的對應點；供 Day 1-02 與 Day 2-01 說明固定 Homography 的幾何關係。 | `day1/d1_02_homography_point_projection.ipynb`、`day2/d2_01_manual_detection_box_to_bev.ipynb` |
+| `sample_court_frame.png` | 球場相機視角範例圖；用於 keypoint 配對、Homography 與 Day 2-01 BBOX-to-BEV 互動。 | `day1/d1_01_keypoint_pairing_homography.ipynb`、`day2/d2_01_manual_detection_box_to_bev.ipynb` |
+| `sample_bev_court.json` | BEV 球場繪製規格；由 `src.geometry_utils.render_bev_court` 產生投影底圖。 | `day1/d1_01_keypoint_pairing_homography.ipynb`、`day1/d1_03_keypoint_annotation_roboflow_lab.ipynb`、`day2/d2_01_manual_detection_box_to_bev.ipynb`、`day2/d2_04_bbox_to_bev_integration.ipynb`、`day3/d3_03_tracking_to_bev_mini_project.ipynb` |
 
 ## 球追蹤模型建議
 

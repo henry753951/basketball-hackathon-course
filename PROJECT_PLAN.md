@@ -2,8 +2,7 @@
 
 ## Day 1 - Coordinates, Homography, Annotation Setup
 
-- `day1/d1_01_colab_and_coordinate_click_tool.ipynb`: HTML canvas click tool; students copy image coordinates.
-- `day1/d1_02_homography_point_projection.ipynb`: camera points + BEV points → homography matrix → project one point.
+- `day1/d1_01_keypoint_pairing_homography.ipynb`: BEV keypoint and camera-frame pairing tool; students build at least four correspondences, compute homography, and project a footpoint.
 - `day1/d1_03_keypoint_annotation_roboflow_lab.ipynb`: Roboflow COCO keypoint export, YOLO pose conversion, optional Ultralytics training, trained court keypoint inference.
 - `day1/d1_04_bbox_homework_setup.ipynb`: BBOX class design, Roboflow YOLO export check, optional Ultralytics detector training, trained detector inference.
 
