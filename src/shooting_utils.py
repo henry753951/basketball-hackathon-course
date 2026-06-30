@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
+from typing import cast
 
 import cv2
 import numpy as np
@@ -9,7 +10,7 @@ import pandas as pd
 
 
 def _row_float(row: pd.Series, key: str) -> float:
-    return float(row.at[key])
+    return float(cast(float, row.at[key]))
 
 
 def angle_3pt(a, b, c) -> float:
