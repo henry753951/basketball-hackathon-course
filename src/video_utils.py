@@ -97,12 +97,18 @@ def convert_all_raw_videos(
 ) -> list[Path]:
     course_root = Path(course_root)
     raw_dir = course_root / "assets" / "raw"
+    reference_dir = (raw_dir / "reference_videos").resolve()
     converted_dir = course_root / "assets" / "converted"
     unpack_archives(raw_dir)
     videos = []
     for ext in VIDEO_EXTS:
         videos.extend(raw_dir.rglob(f"*{ext}"))
         videos.extend(raw_dir.rglob(f"*{ext.upper()}"))
+    videos = [
+        path
+        for path in videos
+        if reference_dir not in path.resolve().parents
+    ]
     outputs = []
     for i, src in enumerate(sorted(set(videos)), start=1):
         out = converted_dir / f"video_{i:03d}.mp4"
