@@ -56,6 +56,28 @@ course/
 └── workshop_schedule_updated.tex
 ```
 
+## 資料與範例素材
+
+`assets/` 存放課程輸入資料、學生影片與 Notebook 輸出結果。
+
+| 路徑 | 用途 |
+| --- | --- |
+| `assets/raw/` | 學生自行上傳的原始影片或壓縮檔。 |
+| `assets/converted/` | 經 Notebook 轉檔後的 MP4 影片，供 Day 4、Day 5 分析使用。 |
+| `assets/samples/` | 課程內建範例素材；用於沒有學生影片、模型權重或標註資料時的課堂執行與驗證。 |
+| `assets/results/` | Notebook 產生的圖檔、CSV、JSON 與 showcase zip。此資料夾內容不納入版本控制，僅保留 `.gitkeep`。 |
+
+`assets/samples/` 內容如下：
+
+| 檔案 | 使用單元 | 說明 |
+| --- | --- | --- |
+| `sample_court_frame.png` | Day 1 - Day 3 | 球場相機視角範例圖，用於座標點選、Homography、Detection 與 Tracking 視覺化。 |
+| `sample_bev_court.png` | Day 1 - Day 3 | 鳥瞰圖球場底圖，用於顯示投影後的球員位置與移動路徑。 |
+| `sample_homography_points.json` | Day 1 - Day 2 | 相機座標與 BEV 座標的對應點，以及單一球員 bbox 範例。 |
+| `sample_detections_frame0.json` | Day 1 - Day 2 | 單張影像的範例 detection 輸出，包含 class、confidence 與 bbox。 |
+| `sample_tracking_boxes.json` | Day 3 | 多影格 bbox 範例，用於 IoU association、簡化 tracking 與 BEV 路徑投影。 |
+| `sample_ball_motion.mp4` | Day 4 | 籃球運動短片範例；當學生尚未上傳影片時，用於球軌跡追蹤。 |
+
 ## 建議上課順序
 
 ### Day 1：座標、點選工具、Homography、Roboflow keypoint / bbox 作業準備
