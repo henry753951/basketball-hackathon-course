@@ -4,21 +4,21 @@
 
 - `day1/d1_01_colab_and_coordinate_click_tool.ipynb`: HTML canvas click tool; students copy image coordinates.
 - `day1/d1_02_homography_point_projection.ipynb`: camera points + BEV points → homography matrix → project one point.
-- `day1/d1_03_keypoint_annotation_roboflow_lab.ipynb`: keypoint label order, error check, optional training skeleton.
-- `day1/d1_04_bbox_homework_setup.ipynb`: BBOX class design and Roboflow homework setup.
+- `day1/d1_03_keypoint_annotation_roboflow_lab.ipynb`: Roboflow COCO keypoint export, YOLO pose conversion, optional Ultralytics training, trained court keypoint inference.
+- `day1/d1_04_bbox_homework_setup.ipynb`: BBOX class design, Roboflow YOLO export check, optional Ultralytics detector training, trained detector inference.
 
 ## Day 2 - Detection and BBOX-to-BEV
 
-- `day2/d2_01_manual_detection_box_to_bev.ipynb`: hard-coded player box → bottom-center → BEV.
-- `day2/d2_02_yolo26_detection_preview.ipynb`: trained model if available; sample JSON fallback.
-- `day2/d2_03_roboflow_bbox_training_preview.ipynb`: Roboflow / YOLO training preview, disabled by default.
-- `day2/d2_04_bbox_to_bev_integration.ipynb`: multiple player boxes → projected BEV points.
+- `day2/d2_01_manual_detection_box_to_bev.ipynb`: trained detector box → bottom-center → interactive BEV projection.
+- `day2/d2_02_yolo26_detection.ipynb`: trained YOLO26 detector inference on reference video.
+- `day2/d2_03_roboflow_bbox_training.ipynb`: Roboflow YOLO export, optional detector training, trained detector video preview.
+- `day2/d2_04_bbox_to_bev_integration.ipynb`: detector + court keypoint model + homography → BEV video.
 
 ## Day 3 - ByteTrack and Tactical Board
 
-- `day3/d3_01_tracking_concept_iou_association.ipynb`: IoU matrix and association.
-- `day3/d3_02_bytetrack_demo_with_sample_boxes.ipynb`: track IDs from a simple tracker / ByteTrack concept.
-- `day3/d3_03_tracking_to_bev_mini_project.ipynb`: track paths projected to BEV.
+- `day3/d3_01_tracking_concept_iou_association.ipynb`: IoU matrix from real detector outputs on adjacent frames.
+- `day3/d3_02_yolo_bytetrack_tracking.ipynb`: Ultralytics tracking mode with `bytetrack.yaml`.
+- `day3/d3_03_tracking_to_bev_mini_project.ipynb`: detector + ByteTrack + court keypoint homography → BEV path video.
 
 ## Day 4 - Outdoor Shooting Video Analysis
 

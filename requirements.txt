@@ -8,3 +8,4 @@ requests
 ultralytics
 supervision
 mediapipe
+pyyaml
