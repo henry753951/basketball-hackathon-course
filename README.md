@@ -49,7 +49,7 @@ course/
 ├── assets/
 │   ├── raw/          # 學生原始影片或壓縮檔
 │   ├── converted/    # ffmpeg 轉成 mp4 後的影片
-│   ├── samples/      # 課程範例圖片、json、短影片
+│   ├── samples/      # 課程範例圖片與 json data
 │   └── results/      # 分析輸出
 ├── src/
 ├── requirements.txt
@@ -64,7 +64,7 @@ course/
 | --- | --- |
 | `assets/raw/` | 學生自行上傳的原始影片或壓縮檔。 |
 | `assets/converted/` | 經 Notebook 轉檔後的 MP4 影片，供 Day 4、Day 5 分析使用。 |
-| `assets/samples/` | 課程內建範例素材；用於沒有學生影片、模型權重或標註資料時的課堂執行與驗證。 |
+| `assets/samples/` | 課程內建範例資料；用於沒有模型權重或標註資料時的課堂執行與驗證。 |
 | `assets/results/` | Notebook 產生的圖檔、CSV、JSON 與 showcase zip。此資料夾內容不納入版本控制，僅保留 `.gitkeep`。 |
 
 `assets/samples/` 內容如下：
@@ -72,11 +72,18 @@ course/
 | 檔案 | 使用單元 | 說明 |
 | --- | --- | --- |
 | `sample_court_frame.png` | Day 1 - Day 3 | 球場相機視角範例圖，用於座標點選、Homography、Detection 與 Tracking 視覺化。 |
-| `sample_bev_court.png` | Day 1 - Day 3 | 鳥瞰圖球場底圖，用於顯示投影後的球員位置與移動路徑。 |
-| `sample_homography_points.json` | Day 1 - Day 2 | 相機座標與 BEV 座標的對應點，以及單一球員 bbox 範例。 |
+| `sample_bev_court.json` | Day 1 - Day 3 | BEV 球場繪製規格；由 `src.geometry_utils.render_bev_court` 產生投影底圖。 |
+| `sample_homography_points.json` | Day 1 - Day 3 | 相機座標與 BEV 座標的對應點，以及單一球員 bbox 範例。 |
 | `sample_detections_frame0.json` | Day 1 - Day 2 | 單張影像的範例 detection 輸出，包含 class、confidence 與 bbox。 |
 | `sample_tracking_boxes.json` | Day 3 | 多影格 bbox 範例，用於 IoU association、簡化 tracking 與 BEV 路徑投影。 |
-| `sample_ball_motion.mp4` | Day 4 | 籃球運動短片範例；當學生尚未上傳影片時，用於球軌跡追蹤。 |
+
+完整使用位置請見 `assets/README.md`。
+
+## 球追蹤模型建議
+
+Day 4-03 的 `track_orange_ball` 是顏色式基準方法，僅用於建立球中心點、速度與出手 frame 的資料格式。在正式專案中，建議使用 Ultralytics YOLO 類型的 object detector 偵測籃球，類別至少包含 `ball`；若任務包含進球判斷，可加入 `ball-in-basket`、rim 或 backboard。
+
+偵測結果再交由 ByteTrack 或 BoT-SORT 做跨 frame 關聯；短暫漏偵可用插值補齊。球體尺寸小、移動快且容易遮擋，訓練資料應涵蓋不同拍攝角度、場地光線、球衣顏色與壓縮品質。
 
 ## 建議上課順序
 

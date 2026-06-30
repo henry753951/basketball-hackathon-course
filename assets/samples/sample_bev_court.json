@@ -1,0 +1,75 @@
+{
+  "description": "BEV court drawing specification. Coordinates are in pixel space and match the sample_homography_points.json target coordinates.",
+  "canvas": {
+    "width": 940,
+    "height": 500,
+    "background_rgb": [248, 248, 248]
+  },
+  "style": {
+    "line_rgb": [40, 40, 40],
+    "line_thickness": 2
+  },
+  "polylines": [
+    {
+      "name": "outer_boundary",
+      "points": [[60, 60], [880, 60], [880, 440], [60, 440]],
+      "closed": true
+    },
+    {
+      "name": "center_line",
+      "points": [[470, 60], [470, 440]],
+      "closed": false
+    },
+    {
+      "name": "left_paint",
+      "points": [[60, 170], [220, 170], [220, 330], [60, 330]],
+      "closed": true
+    },
+    {
+      "name": "right_paint",
+      "points": [[880, 170], [720, 170], [720, 330], [880, 330]],
+      "closed": true
+    },
+    {
+      "name": "left_backboard",
+      "points": [[115, 205], [115, 295]],
+      "closed": false,
+      "thickness": 4
+    },
+    {
+      "name": "right_backboard",
+      "points": [[825, 205], [825, 295]],
+      "closed": false,
+      "thickness": 4
+    }
+  ],
+  "circles": [
+    {
+      "name": "center_circle",
+      "center": [470, 250],
+      "radius": 62
+    },
+    {
+      "name": "left_free_throw_circle",
+      "center": [220, 250],
+      "radius": 58
+    },
+    {
+      "name": "right_free_throw_circle",
+      "center": [720, 250],
+      "radius": 58
+    },
+    {
+      "name": "left_rim",
+      "center": [135, 250],
+      "radius": 10,
+      "thickness": 2
+    },
+    {
+      "name": "right_rim",
+      "center": [805, 250],
+      "radius": 10,
+      "thickness": 2
+    }
+  ]
+}

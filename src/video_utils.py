@@ -127,7 +127,6 @@ def pick_first_converted_video(course_root: str | Path) -> Path:
     videos = list_videos(course_root / "assets" / "converted")
     if videos:
         return videos[0]
-    sample = course_root / "assets" / "samples" / "sample_ball_motion.mp4"
-    if sample.exists():
-        return sample
-    raise FileNotFoundError("找不到 converted 影片，也找不到 sample_ball_motion.mp4。")
+    raise FileNotFoundError(
+        "找不到 converted 影片。請先在 Day 4-01 上傳影片並完成轉檔。"
+    )

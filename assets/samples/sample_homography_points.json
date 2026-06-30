@@ -1,5 +1,5 @@
 {
-  "description": "camera_points 對應 sample_court_frame.png；bev_points 對應 sample_bev_court.png。這組點只用於教學體驗，課堂會讓學生自行用滑鼠工具改點。",
+  "description": "camera_points 對應 sample_court_frame.png；bev_points 對應 sample_bev_court.json 繪製出的 BEV 底圖。這組點只用於課堂示範，實作時需由學生重新標定。",
   "camera_points": [
     [
       818,

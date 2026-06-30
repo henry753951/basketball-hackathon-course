@@ -28,6 +28,49 @@ def project_points(points_xy: Sequence[Sequence[float]], H: np.ndarray) -> np.nd
     return out
 
 
+def render_bev_court(spec_path: str | Path) -> np.ndarray:
+    spec = load_json(spec_path)
+    canvas = spec["canvas"]
+    style = spec.get("style", {})
+    width = int(canvas["width"])
+    height = int(canvas["height"])
+    background = tuple(int(v) for v in canvas.get("background_rgb", [248, 248, 248]))
+    default_color = tuple(int(v) for v in style.get("line_rgb", [40, 40, 40]))
+    default_thickness = int(style.get("line_thickness", 2))
+
+    image = np.zeros((height, width, 3), dtype=np.uint8)
+    image[:, :] = background
+
+    for item in spec.get("polylines", []):
+        points = np.asarray(item["points"], dtype=np.int32).reshape(-1, 1, 2)
+        color = tuple(int(v) for v in item.get("rgb", default_color))
+        thickness = int(item.get("thickness", default_thickness))
+        cv2.polylines(
+            image,
+            [points],
+            isClosed=bool(item.get("closed", False)),
+            color=color,
+            thickness=thickness,
+            lineType=cv2.LINE_AA,
+        )
+
+    for item in spec.get("circles", []):
+        center = tuple(int(v) for v in item["center"])
+        radius = int(item["radius"])
+        color = tuple(int(v) for v in item.get("rgb", default_color))
+        thickness = int(item.get("thickness", default_thickness))
+        cv2.circle(
+            image,
+            center,
+            radius,
+            color,
+            thickness,
+            lineType=cv2.LINE_AA,
+        )
+
+    return image
+
+
 def load_sample_homography(course_root: str | Path):
     course_root = Path(course_root)
     data = load_json(
@@ -49,7 +92,9 @@ def draw_projection_pair(
     frame = read_image_rgb(
         course_root / "assets" / "samples" / "sample_court_frame.png"
     )
-    bev = read_image_rgb(course_root / "assets" / "samples" / "sample_bev_court.png")
+    bev = render_bev_court(
+        course_root / "assets" / "samples" / "sample_bev_court.json"
+    )
     frame_vis = draw_points(frame, [camera_point], ["camera point"])
     bev_vis = draw_points(bev, [bev_point], ["BEV point"])
     combo = side_by_side(frame_vis, bev_vis)
