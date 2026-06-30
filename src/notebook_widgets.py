@@ -430,3 +430,150 @@ def show_bbox_to_bev_tool(
     </script>
     """
     display(HTML(html))
+
+
+def show_homography_projection_tool(
+    image_path: str | Path,
+    bev_image_path: str | Path,
+    homography_matrix: Sequence[Sequence[float]],
+    canvas_width: int = 1000,
+    title: str = "Homography Projection Tool",
+) -> None:
+    """Click any point in the camera image and project it to the BEV court."""
+    image_path = Path(image_path)
+    bev_image_path = Path(bev_image_path)
+    image_b64 = base64.b64encode(image_path.read_bytes()).decode("utf-8")
+    bev_b64 = base64.b64encode(bev_image_path.read_bytes()).decode("utf-8")
+    base_id = f"{image_path.stem}_{bev_image_path.stem}".replace("-", "_")
+    camera_canvas_id = f"proj_camera_{base_id}"
+    bev_canvas_id = f"proj_bev_{base_id}"
+    output_id = f"proj_output_{base_id}"
+    status_id = f"proj_status_{base_id}"
+    H_json = json.dumps([[float(v) for v in row] for row in homography_matrix])
+
+    html = f"""
+    <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+      <h3 style="margin: 0 0 8px 0;">{title}</h3>
+      <p style="margin: 0 0 10px 0;">
+        點選左側相機畫面任一位置；工具會立即用目前的 Homography 矩陣投影到右側 BEV。
+      </p>
+      <div id="{status_id}" style="margin: 0 0 8px 0; font-weight: 600;"></div>
+      <div style="display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:16px; align-items:start;">
+        <canvas id="{camera_canvas_id}" style="border:1px solid #999; max-width:100%; display:block;"></canvas>
+        <canvas id="{bev_canvas_id}" style="border:1px solid #999; max-width:100%; display:block;"></canvas>
+      </div>
+      <p style="margin: 8px 0 4px 0;">projection JSON：</p>
+      <textarea id="{output_id}" rows="10" style="width:100%; font-family:monospace;"></textarea>
+      <br />
+      <button onclick="window.clear_{base_id}()" style="margin-top: 8px;">清除點位</button>
+    </div>
+    <script>
+    (function() {{
+      const cameraImg = new Image();
+      const bevImg = new Image();
+      const cameraCanvas = document.getElementById("{camera_canvas_id}");
+      const bevCanvas = document.getElementById("{bev_canvas_id}");
+      const cctx = cameraCanvas.getContext("2d");
+      const bctx = bevCanvas.getContext("2d");
+      const output = document.getElementById("{output_id}");
+      const status = document.getElementById("{status_id}");
+      const H = {H_json};
+      const clicks = [];
+      let imagesReady = 0;
+
+      function eventToImage(canvas, img, event) {{
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.round((event.clientX - rect.left) * img.width / rect.width);
+        const y = Math.round((event.clientY - rect.top) * img.height / rect.height);
+        return [x, y];
+      }}
+
+      function imageToCanvas(canvas, img, point) {{
+        return [
+          point[0] * canvas.width / img.width,
+          point[1] * canvas.height / img.height
+        ];
+      }}
+
+      function project(point) {{
+        const x = point[0];
+        const y = point[1];
+        const denom = H[2][0] * x + H[2][1] * y + H[2][2];
+        return [
+          (H[0][0] * x + H[0][1] * y + H[0][2]) / denom,
+          (H[1][0] * x + H[1][1] * y + H[1][2]) / denom
+        ];
+      }}
+
+      function drawMarker(ctx, x, y, fillColor, label) {{
+        ctx.beginPath();
+        ctx.arc(x, y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = "white";
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, Math.PI * 2);
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+        ctx.font = "13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "rgba(255,255,255,0.95)";
+        ctx.strokeText(label, x + 8, y - 8);
+        ctx.fillStyle = fillColor;
+        ctx.fillText(label, x + 8, y - 8);
+      }}
+
+      function redraw() {{
+        cctx.drawImage(cameraImg, 0, 0, cameraCanvas.width, cameraCanvas.height);
+        bctx.drawImage(bevImg, 0, 0, bevCanvas.width, bevCanvas.height);
+        for (let i = 0; i < clicks.length; i++) {{
+          const item = clicks[i];
+          const cp = imageToCanvas(cameraCanvas, cameraImg, item.camera_xy);
+          const bp = imageToCanvas(bevCanvas, bevImg, item.bev_xy);
+          drawMarker(cctx, cp[0], cp[1], "rgb(255,80,80)", String(i));
+          drawMarker(bctx, bp[0], bp[1], "rgb(46,204,113)", String(i));
+        }}
+        output.value = JSON.stringify({{
+          projections: clicks,
+          camera_points: clicks.map(item => item.camera_xy),
+          bev_points: clicks.map(item => item.bev_xy)
+        }}, null, 2);
+        status.textContent = `${{clicks.length}} projected point(s)` + (clicks.length > 0 ? "" : ". click the camera image");
+      }}
+
+      function setupCanvas(canvas, img) {{
+        const scale = Math.min(1, {canvas_width} / img.width);
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+      }}
+
+      function maybeInit() {{
+        imagesReady += 1;
+        if (imagesReady !== 2) return;
+        setupCanvas(cameraCanvas, cameraImg);
+        setupCanvas(bevCanvas, bevImg);
+        redraw();
+      }}
+
+      cameraCanvas.addEventListener("click", function(event) {{
+        const cameraPoint = eventToImage(cameraCanvas, cameraImg, event);
+        const bevPoint = project(cameraPoint);
+        clicks.push({{
+          camera_xy: cameraPoint.map(v => Number(v.toFixed(2))),
+          bev_xy: bevPoint.map(v => Number(v.toFixed(2)))
+        }});
+        redraw();
+      }});
+
+      window.clear_{base_id} = function() {{
+        clicks.length = 0;
+        redraw();
+      }};
+
+      cameraImg.onload = maybeInit;
+      bevImg.onload = maybeInit;
+      cameraImg.src = "data:image/png;base64,{image_b64}";
+      bevImg.src = "data:image/png;base64,{bev_b64}";
+    }})();
+    </script>
+    """
+    display(HTML(html))
