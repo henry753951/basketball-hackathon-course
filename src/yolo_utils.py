@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Sequence
-
+import random
 import cv2
 import numpy as np
 
@@ -139,7 +139,9 @@ class CourtKeypointRecord:
 
 
 def detector_model_path(course_root: str | Path) -> Path:
-    return Path(course_root) / "assets" / "models" / "detectors" / "yolo26n_basketball_player_best.pt"
+    return (
+        Path(course_root) / "assets" / "models" / "detectors" / "yolo26n_basketball_player_best.pt"
+    )
 
 
 def court_keypoint_model_path(course_root: str | Path) -> Path:
@@ -169,6 +171,15 @@ def first_reference_video(course_root: str | Path) -> Path:
     return videos[0]
 
 
+def random_reference_video(course_root: str | Path) -> Path:
+    videos = reference_videos(course_root)
+    if not videos:
+        raise FileNotFoundError(
+            "找不到參考影片。請確認 assets/raw/reference_videos/ 內至少有一支 mp4。"
+        )
+    return random.choice(videos)
+
+
 def load_yolo_model(model_path: str | Path):
     model_path = Path(model_path)
     if not model_path.exists():
@@ -195,8 +206,7 @@ def mp4_fourcc() -> int:
 
 
 def rgb_from_ultralytics_plot(result: Any) -> np.ndarray:
-    plotted_bgr = result.plot()
-    return cv2.cvtColor(plotted_bgr, cv2.COLOR_BGR2RGB)
+    return np.asarray(result.plot()).copy()
 
 
 def _result_names(result: Any) -> dict[int, str]:
@@ -261,6 +271,13 @@ def draw_detection_records(
         for det in keep
     ]
     return draw_boxes(image_rgb, [det.bbox_xyxy for det in keep], labels)
+
+
+def draw_court_keypoint_records(
+    image_rgb: np.ndarray,
+    keypoints: Sequence[CourtKeypointRecord],
+) -> np.ndarray:
+    return _draw_keypoints_overlay(image_rgb, keypoints)
 
 
 def court_vertices_normalized(league: str = "nba") -> list[tuple[float, float]]:
@@ -403,7 +420,9 @@ def estimate_homography_from_keypoints(
         return None
     if np.linalg.matrix_rank(dst - dst.mean(axis=0)) < 2:
         return None
-    H, mask = cv2.findHomography(src, dst, method=cv2.RANSAC, ransacReprojThreshold=ransac_threshold)
+    H, mask = cv2.findHomography(
+        src, dst, method=cv2.RANSAC, ransacReprojThreshold=ransac_threshold
+    )
     if H is None or mask is None:
         return None
     inlier_count = int(mask.ravel().sum())
@@ -440,7 +459,9 @@ def run_court_keypoints_on_image(
     return keypoints, estimate_homography_from_keypoints(keypoints), result
 
 
-def records_to_dicts(records: Sequence[DetectionRecord | CourtKeypointRecord]) -> list[dict[str, Any]]:
+def records_to_dicts(
+    records: Sequence[DetectionRecord | CourtKeypointRecord],
+) -> list[dict[str, Any]]:
     return [record.__dict__ for record in records]
 
 
@@ -688,7 +709,7 @@ def write_court_keypoint_preview_video(
             court_bounds=court_bounds,
         )
         H = estimate_homography_from_keypoints(keypoints)
-        frame_vis = _draw_keypoints_overlay(rgb_from_ultralytics_plot(result), keypoints)
+        frame_vis = draw_court_keypoint_records(frame_rgb, keypoints)
         bev_vis = _draw_bev_keypoints(bev_base, keypoints)
         bev_vis = cv2.resize(bev_vis, (frame_width, frame_height))
         writer.write(cv2.cvtColor(np.hstack([frame_vis, bev_vis]), cv2.COLOR_RGB2BGR))
@@ -752,7 +773,9 @@ def write_detector_keypoint_bev_video(
         det_result = detector.predict(frame_rgb, conf=detector_conf, imgsz=imgsz, verbose=False)[0]
         detections = detections_from_result(det_result, frame_index=frame_index)
         players = _player_detections(detections)
-        key_result = court_model.predict(frame_rgb, conf=keypoint_conf, imgsz=imgsz, verbose=False)[0]
+        key_result = court_model.predict(frame_rgb, conf=keypoint_conf, imgsz=imgsz, verbose=False)[
+            0
+        ]
         keypoints = court_keypoints_from_result(
             key_result,
             bev_base.shape,
@@ -804,7 +827,11 @@ def _detections_to_supervision(result: Any) -> Any:
     if len(detections) == 0:
         detections.data["class_name"] = np.asarray([], dtype=str)
         return detections
-    class_ids = detections.class_id if detections.class_id is not None else np.zeros(len(detections), dtype=int)
+    class_ids = (
+        detections.class_id
+        if detections.class_id is not None
+        else np.zeros(len(detections), dtype=int)
+    )
     class_names = np.asarray([names.get(int(class_id), str(class_id)) for class_id in class_ids])
     detections.data["class_name"] = class_names
     mask = np.isin(class_names, list(PLAYER_CLASS_NAMES))
@@ -865,7 +892,9 @@ def write_bytetrack_bev_video(
         frame_index = source_frame_index
         frame_rgb = cv2.cvtColor(det_result.orig_img, cv2.COLOR_BGR2RGB)
         tracked = _detections_to_supervision(det_result)
-        key_result = court_model.predict(frame_rgb, conf=keypoint_conf, imgsz=imgsz, verbose=False)[0]
+        key_result = court_model.predict(frame_rgb, conf=keypoint_conf, imgsz=imgsz, verbose=False)[
+            0
+        ]
         keypoints = court_keypoints_from_result(
             key_result,
             bev_base.shape,
@@ -879,7 +908,9 @@ def write_bytetrack_bev_video(
             last_H = H
 
         xyxy = np.asarray(tracked.xyxy, dtype=float)
-        tracker_ids = tracked.tracker_id if tracked.tracker_id is not None else np.arange(len(tracked))
+        tracker_ids = (
+            tracked.tracker_id if tracked.tracker_id is not None else np.arange(len(tracked))
+        )
         feet = [bottom_center(box) for box in xyxy]
         bev_points = project_points(feet, H) if H is not None and feet else np.empty((0, 2))
         labels = [str(int(tid)) for tid in tracker_ids]

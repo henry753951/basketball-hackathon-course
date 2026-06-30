@@ -19,7 +19,7 @@
 | 檔案 | 說明 | 使用 Notebook |
 | --- | --- | --- |
 | `sample_court_frame.png` | 球場相機視角範例圖；用於 keypoint 配對、Homography 與 Day 2-01 BBOX-to-BEV 互動。 | `day1/d1_01_keypoint_pairing_homography.ipynb`、`day2/d2_01_manual_detection_box_to_bev.ipynb` |
-| `sample_bev_court.json` | Reference-style colorful BEV court template；由 `src.geometry_utils.render_bev_court` 產生投影底圖。 | `day1/d1_01_keypoint_pairing_homography.ipynb`、`day1/d1_03_keypoint_annotation_roboflow_lab.ipynb`、`day2/d2_01_manual_detection_box_to_bev.ipynb`、`day2/d2_04_bbox_to_bev_integration.ipynb`、`day3/d3_03_tracking_to_bev_mini_project.ipynb` |
+| `sample_bev_court.json` | Reference-style colorful BEV court template；由 `src.geometry_utils.render_bev_court` 產生投影底圖。 | `day1/d1_01_keypoint_pairing_homography.ipynb`、`day1/d1_02_keypoint_annotation_roboflow_lab.ipynb`、`day2/d2_01_manual_detection_box_to_bev.ipynb`、`day2/d2_04_bbox_to_bev_integration.ipynb`、`day3/d3_03_tracking_to_bev_mini_project.ipynb` |
 
 ## 球追蹤模型建議
 

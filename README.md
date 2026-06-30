@@ -92,8 +92,8 @@ Day 4-03 的 `track_orange_ball` 是顏色式基準方法，僅用於建立球�
 ### Day 1：座標、點選工具、Homography、Roboflow keypoint / bbox 作業準備
 
 1. `day1/d1_01_keypoint_pairing_homography.ipynb`
-2. `day1/d1_03_keypoint_annotation_roboflow_lab.ipynb`
-3. `day1/d1_04_bbox_homework_setup.ipynb`
+2. `day1/d1_02_keypoint_annotation_roboflow_lab.ipynb`
+3. `day1/d1_03_bbox_homework_setup.ipynb`
 
 ### Day 2：Detection 與 BBOX-to-BEV
 
