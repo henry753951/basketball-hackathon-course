@@ -277,8 +277,18 @@ def draw_detection_records(
 def draw_court_keypoint_records(
     image_rgb: np.ndarray,
     keypoints: Sequence[CourtKeypointRecord],
+    *,
+    show_labels: bool = True,
+    point_radius: int = 7,
+    line_thickness: int = 3,
 ) -> np.ndarray:
-    return _draw_keypoints_overlay(image_rgb, keypoints)
+    return _draw_keypoints_overlay(
+        image_rgb,
+        keypoints,
+        show_labels=show_labels,
+        point_radius=point_radius,
+        line_thickness=line_thickness,
+    )
 
 
 def court_vertices_normalized(league: str = "nba") -> list[tuple[float, float]]:
@@ -576,6 +586,10 @@ def _track_color(track_id: int) -> tuple[int, int, int]:
 def _draw_keypoints_overlay(
     image_rgb: np.ndarray,
     keypoints: Sequence[CourtKeypointRecord],
+    *,
+    show_labels: bool = True,
+    point_radius: int = 7,
+    line_thickness: int = 3,
 ) -> np.ndarray:
     image = image_rgb.copy()
     points_by_index = {kp.index: kp for kp in keypoints}
@@ -589,7 +603,7 @@ def _draw_keypoints_overlay(
             (int(round(start.image_xy[0])), int(round(start.image_xy[1]))),
             (int(round(end.image_xy[0])), int(round(end.image_xy[1]))),
             court_edge_color_rgb(edge_index),
-            3,
+            line_thickness,
             cv2.LINE_AA,
         )
     for group_name, (start_idx, end_idx) in COURT_SPECIAL_SEGMENTS:
@@ -602,33 +616,34 @@ def _draw_keypoints_overlay(
             (int(round(start.image_xy[0])), int(round(start.image_xy[1]))),
             (int(round(end.image_xy[0])), int(round(end.image_xy[1]))),
             court_group_color_rgb(group_name),
-            3,
+            line_thickness,
             cv2.LINE_AA,
         )
     for kp in keypoints:
         x, y = int(round(kp.image_xy[0])), int(round(kp.image_xy[1]))
-        cv2.circle(image, (x, y), 7, (255, 255, 255), -1, cv2.LINE_AA)
-        cv2.circle(image, (x, y), 7, (51, 65, 85), 2, cv2.LINE_AA)
-        cv2.putText(
-            image,
-            kp.label,
-            (x + 8, y - 8),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (15, 23, 42),
-            3,
-            cv2.LINE_AA,
-        )
-        cv2.putText(
-            image,
-            kp.label,
-            (x + 8, y - 8),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (255, 255, 255),
-            1,
-            cv2.LINE_AA,
-        )
+        cv2.circle(image, (x, y), point_radius, (255, 255, 255), -1, cv2.LINE_AA)
+        cv2.circle(image, (x, y), point_radius, (51, 65, 85), 2, cv2.LINE_AA)
+        if show_labels:
+            cv2.putText(
+                image,
+                kp.label,
+                (x + 8, y - 8),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (15, 23, 42),
+                3,
+                cv2.LINE_AA,
+            )
+            cv2.putText(
+                image,
+                kp.label,
+                (x + 8, y - 8),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (255, 255, 255),
+                1,
+                cv2.LINE_AA,
+            )
     return image
 
 
