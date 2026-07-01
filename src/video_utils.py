@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import base64
+import shutil
 import subprocess
 import zipfile
 from pathlib import Path
 
 import cv2
+from IPython.display import HTML, display
 import requests
 
 VIDEO_EXTS = {".mp4", ".mov", ".m4v", ".webm", ".3gp", ".avi", ".mkv"}
@@ -90,6 +93,80 @@ def convert_video(
     print("$", " ".join(cmd))
     subprocess.run(cmd, check=True)
     return output_path
+
+
+def ensure_notebook_playable_mp4(
+    video_path: str | Path,
+    *,
+    overwrite: bool = True,
+    crf: int = 23,
+    preset: str = "veryfast",
+) -> Path:
+    """Re-encode a video to a browser-friendly H.264 MP4 for notebook playback."""
+    video_path = Path(video_path)
+    if not video_path.exists():
+        raise FileNotFoundError(video_path)
+    if shutil.which("ffmpeg") is None:
+        return video_path
+
+    output_path = video_path
+    if overwrite:
+        output_path = video_path.with_name(video_path.stem + ".notebook.mp4")
+
+    cmd = [
+        "ffmpeg",
+        "-y",
+        "-i",
+        str(video_path),
+        "-an",
+        "-vcodec",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "+faststart",
+        "-preset",
+        preset,
+        "-crf",
+        str(crf),
+        str(output_path),
+    ]
+    print("$", " ".join(cmd))
+    subprocess.run(cmd, check=True)
+
+    if overwrite:
+        output_path.replace(video_path)
+        return video_path
+    return output_path
+
+
+def display_video_in_notebook(
+    video_path: str | Path,
+    *,
+    width: int = 960,
+    controls: bool = True,
+    muted: bool = True,
+    loop: bool = False,
+) -> None:
+    """Embed a local MP4 directly into notebook output."""
+    video_path = Path(video_path)
+    mime_type = "video/mp4"
+    b64 = base64.b64encode(video_path.read_bytes()).decode("utf-8")
+    attrs = []
+    if controls:
+        attrs.append("controls")
+    if muted:
+        attrs.append("muted")
+    if loop:
+        attrs.append("loop")
+    attr_text = " ".join(attrs)
+    html = f"""
+    <video {attr_text} width="{width}" style="max-width:100%; height:auto;">
+      <source src="data:{mime_type};base64,{b64}" type="{mime_type}">
+      無法預覽影片，請下載後播放。
+    </video>
+    """
+    display(HTML(html))
 
 
 def convert_all_raw_videos(

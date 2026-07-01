@@ -17,6 +17,7 @@ from .geometry_utils import (
     project_points,
     render_bev_court,
 )
+from .video_utils import ensure_notebook_playable_mp4
 
 BASKETBALL_CLASSES = [
     "ball",
@@ -504,6 +505,7 @@ def write_detection_preview_video(
         frame_index += 1
     cap.release()
     writer.release()
+    ensure_notebook_playable_mp4(output_path)
     save_json(all_records, output_path.with_suffix(".json"))
     return output_path, all_records
 
@@ -724,6 +726,7 @@ def write_court_keypoint_preview_video(
         local_frame_index += 1
     cap.release()
     writer.release()
+    ensure_notebook_playable_mp4(output_path)
     save_json(rows, output_path.with_suffix(".json"))
     return output_path, rows
 
@@ -815,6 +818,7 @@ def write_detector_keypoint_bev_video(
         local_frame_index += 1
     cap.release()
     writer.release()
+    ensure_notebook_playable_mp4(output_path)
     save_json(rows, output_path.with_suffix(".json"))
     return output_path, rows
 
@@ -955,5 +959,6 @@ def write_bytetrack_bev_video(
         local_frame_index += 1
     cap.release()
     writer.release()
+    ensure_notebook_playable_mp4(output_path)
     save_json(records, output_path.with_suffix(".json"))
     return output_path, records
