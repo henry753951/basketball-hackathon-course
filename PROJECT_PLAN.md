@@ -8,10 +8,10 @@
 
 ## Day 2 - Detection and BBOX-to-BEV
 
-- `day2/d2_01_manual_detection_box_to_bev.ipynb`: trained detector box → bottom-center → interactive BEV projection.
-- `day2/d2_02_yolo26_detection.ipynb`: trained YOLO26 detector inference on reference video.
+- `day2/d2_01_yolo26_detection.ipynb`: trained YOLO26 detector inference on reference video.
+- `day2/d2_02_yolo_players_to_bev.ipynb`: trained detector box → bottom-center → project all detected players to BEV in one pass.
 - `day2/d2_03_roboflow_bbox_training.ipynb`: Roboflow YOLO export, optional detector training, trained detector video preview.
-- `day2/d2_04_bbox_to_bev_integration.ipynb`: detector + court keypoint model + homography → BEV video.
+- `day2/d2_04_bbox_to_bev_integration.ipynb`: detector + 即時場地 keypoint + homography integration → BEV video.
 
 ## Day 3 - ByteTrack and Tactical Board
 
