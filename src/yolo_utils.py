@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Sequence
@@ -250,6 +251,69 @@ def run_detector_on_image(
     return detections_from_result(result, frame_index=frame_index), result
 
 
+def _predict_stretched_result(
+    model: Any,
+    image_rgb: np.ndarray,
+    *,
+    conf: float,
+    imgsz: int,
+) -> Any:
+    frame_height, frame_width = image_rgb.shape[:2]
+    stretched = cv2.resize(image_rgb, (imgsz, imgsz), interpolation=cv2.INTER_LINEAR)
+    result = model.predict(stretched, conf=conf, imgsz=imgsz, verbose=False)[0]
+    return _remap_result_to_frame(
+        result,
+        prediction_size=(imgsz, imgsz),
+        frame_size=(frame_width, frame_height),
+    )
+
+
+def _remap_result_to_frame(
+    result: Any,
+    *,
+    prediction_size: tuple[int, int],
+    frame_size: tuple[int, int],
+) -> Any:
+    from ultralytics.engine.results import Boxes, Keypoints
+
+    prediction_width, prediction_height = prediction_size
+    frame_width, frame_height = frame_size
+    scale_x = frame_width / float(prediction_width)
+    scale_y = frame_height / float(prediction_height)
+    orig_shape = (frame_height, frame_width)
+    remapped = copy.deepcopy(result)
+
+    boxes = getattr(remapped, "boxes", None)
+    box_data = getattr(boxes, "data", None)
+    if box_data is not None:
+        scaled_boxes = box_data.clone()
+        scaled_boxes[:, [0, 2]] *= scale_x
+        scaled_boxes[:, [1, 3]] *= scale_y
+        remapped.boxes = Boxes(scaled_boxes, orig_shape)
+
+    keypoints = getattr(remapped, "keypoints", None)
+    keypoint_data = getattr(keypoints, "data", None)
+    if keypoint_data is not None:
+        scaled_keypoints = keypoint_data.clone()
+        scaled_keypoints[..., 0] *= scale_x
+        scaled_keypoints[..., 1] *= scale_y
+        remapped.keypoints = Keypoints(scaled_keypoints, orig_shape)
+
+    remapped.orig_shape = orig_shape
+    return remapped
+
+
+def predict_court_pose_result(
+    model: Any,
+    image_rgb: np.ndarray,
+    *,
+    conf: float = 0.25,
+    imgsz: int = 960,
+) -> Any:
+    """Run court pose inference with the square-stretch preprocessing used during labeling."""
+    return _predict_stretched_result(model, image_rgb, conf=conf, imgsz=imgsz)
+
+
 def draw_detection_records(
     image_rgb: np.ndarray,
     detections: Sequence[DetectionRecord],
@@ -459,7 +523,7 @@ def run_court_keypoints_on_image(
     court_bounds: tuple[float, float, float, float] | None = None,
 ) -> tuple[list[CourtKeypointRecord], np.ndarray | None, Any]:
     model = load_yolo_model(model_path)
-    result = model.predict(image_rgb, conf=conf, imgsz=imgsz, verbose=False)[0]
+    result = predict_court_pose_result(model, image_rgb, conf=conf, imgsz=imgsz)
     keypoints = court_keypoints_from_result(
         result,
         bev_shape,
@@ -502,7 +566,7 @@ def write_detection_preview_video(
         if not ok:
             break
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-        result = model.predict(frame_rgb, conf=conf, imgsz=imgsz, verbose=False)[0]
+        result = predict_court_pose_result(model, frame_rgb, conf=conf, imgsz=imgsz)
         detections = detections_from_result(result, frame_index=frame_index)
         all_records.extend(records_to_dicts(detections))
         vis_rgb = rgb_from_ultralytics_plot(result)
@@ -711,7 +775,7 @@ def write_court_keypoint_preview_video(
             break
         frame_index = start_frame + local_frame_index
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-        result = model.predict(frame_rgb, conf=conf, imgsz=imgsz, verbose=False)[0]
+        result = predict_court_pose_result(model, frame_rgb, conf=conf, imgsz=imgsz)
         keypoints = court_keypoints_from_result(
             result,
             bev_base.shape,
@@ -784,9 +848,12 @@ def write_detector_keypoint_bev_video(
         det_result = detector.predict(frame_rgb, conf=detector_conf, imgsz=imgsz, verbose=False)[0]
         detections = detections_from_result(det_result, frame_index=frame_index)
         players = _player_detections(detections)
-        key_result = court_model.predict(frame_rgb, conf=keypoint_conf, imgsz=imgsz, verbose=False)[
-            0
-        ]
+        key_result = predict_court_pose_result(
+            court_model,
+            frame_rgb,
+            conf=keypoint_conf,
+            imgsz=imgsz,
+        )
         keypoints = court_keypoints_from_result(
             key_result,
             bev_base.shape,
@@ -903,9 +970,12 @@ def write_bytetrack_bev_video(
         frame_index = source_frame_index
         frame_rgb = cv2.cvtColor(det_result.orig_img, cv2.COLOR_BGR2RGB)
         tracked = _detections_to_supervision(det_result)
-        key_result = court_model.predict(frame_rgb, conf=keypoint_conf, imgsz=imgsz, verbose=False)[
-            0
-        ]
+        key_result = predict_court_pose_result(
+            court_model,
+            frame_rgb,
+            conf=keypoint_conf,
+            imgsz=imgsz,
+        )
         keypoints = court_keypoints_from_result(
             key_result,
             bev_base.shape,
