@@ -13,6 +13,7 @@
 | `models/` | 課程提供的已訓練 YOLO detector 與 court keypoint 權重。 |
 | `samples/` | 課程內建範例資料。用於課堂示範、本機驗證，以及尚未取得模型輸出時的替代輸入。 |
 | `results/` | Notebook 執行後產生的圖片、CSV、JSON 與壓縮檔。此資料夾內容不納入版本控制。 |
+| `student_uploads/` | 請學生上傳到 Roboflow 的資料。
 
 ## samples 檔案與使用位置
 

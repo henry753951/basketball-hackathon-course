@@ -95,13 +95,16 @@ Detection 與 court keypoint 訓練 notebook 支援學生輸入 Roboflow API key
 
 學生在 Roboflow 網頁完成標註後，還需要手動到專案的 `Versions` 頁面按 `Generate New Version` / `Publish`。只有已發布的 dataset version 才能被 notebook 的 API 下載流程抓到。建議學生依照下列順序操作：
 
-1. 在 Roboflow 網頁完成標註或修正標註。
-2. 到 `Versions` 頁建立新的 dataset version。
-3. 記下 `workspace slug`、`project slug`、新的 `version number`。
-4. 回到 notebook，把 `USE_ROBOFLOW_DOWNLOAD = True`，再填入 `ROBOFLOW_WORKSPACE`、`ROBOFLOW_PROJECT`、`ROBOFLOW_VERSION`。
-5. `ROBOFLOW_API_KEY` 可留空，執行 cell 時會用 `getpass()` 安全輸入。
+1. 先解壓課程提供的學生上傳素材：
+   `assets/student_uploads/roboflow_pose_student_upload_images.zip` 或 `assets/student_uploads/roboflow_bbox_student_upload_images.zip`。
+2. 到 Roboflow 左側 side menu > `DATA` > `Upload Data`，把 zip 內的 5 張圖片上傳到自己的專案。
+3. 接著到 side menu > `DATA` > `Annotate`，在 `Unassigned` 區塊點 `Annotate Images` 完成標註。
+4. 到 `Versions` 頁建立新的 dataset version。
+5. 記下 `workspace slug`、`project slug`、新的 `version number`。
+6. 回到 notebook，把 `USE_ROBOFLOW_DOWNLOAD = True`，再填入 `ROBOFLOW_WORKSPACE`、`ROBOFLOW_PROJECT`、`ROBOFLOW_VERSION`。
+7. `ROBOFLOW_API_KEY` 可留空，執行 cell 時會用 `getpass()` 安全輸入。
 
-若課程使用示範用的 court keypoint 專案 `basketball-court-detection-2-85wob`（https://universe.roboflow.com/roboflow-jvuqo/basketball-court-detection-2），其中有 5 張 `train` 圖片會刻意保留為未標註，並加上 `needs-annotation` tag，方便學生 fork 後練習補標：
+其中 pose 練習包內含以下 5 張圖片：
 
 - `boston-celtics-new-york-knicks-game-1-q1-01_54-01_48_mp4-0000.jpg`
 - `boston-celtics-new-york-knicks-game-1-q1-01_54-01_48_mp4-0001.jpg`
