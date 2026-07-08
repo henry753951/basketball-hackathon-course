@@ -295,8 +295,8 @@ def default_runtime_course_root(*, drive_mounted: bool) -> Path:
 
 
 def bootstrap_course_repo(
-    *,
     preferred: str | Path | None = None,
+    *,
     repo_url: str = DEFAULT_REPO_URL,
     branch: str = DEFAULT_REPO_BRANCH,
     mount_drive: bool = True,
