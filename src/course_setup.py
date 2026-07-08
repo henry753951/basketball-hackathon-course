@@ -12,6 +12,8 @@ DEFAULT_COURSE_ROOT = Path("/content/drive/MyDrive/basketball_hackathon/course")
 DEFAULT_DRIVE_MOUNT_POINT = "/content/drive"
 DEFAULT_LOCAL_RUNTIME_ROOT = Path("/content/basketball_hackathon/course")
 DEFAULT_LOCAL_CLONE_ROOT = Path("/content/basketball_hackathon_course")
+DEFAULT_REPO_URL = "https://github.com/henry753951/basketball-hackathon-course.git"
+DEFAULT_REPO_BRANCH = "main"
 DEFAULT_REPO_SYNC_EXCLUDES = (
     ".git",
     ".github",
@@ -284,3 +286,48 @@ def bootstrap_candidates() -> list[Path]:
         ]
     )
     return candidates
+
+
+def default_runtime_course_root(*, drive_mounted: bool) -> Path:
+    if drive_mounted:
+        return DEFAULT_COURSE_ROOT
+    return DEFAULT_LOCAL_RUNTIME_ROOT
+
+
+def bootstrap_course_repo(
+    *,
+    preferred: str | Path | None = None,
+    repo_url: str = DEFAULT_REPO_URL,
+    branch: str = DEFAULT_REPO_BRANCH,
+    mount_drive: bool = True,
+    install_requirements: bool = True,
+    show_summary: bool = True,
+) -> Path:
+    """Notebook-friendly bootstrap that can mount Drive or clone the repo when missing."""
+    drive_mounted = False
+    if mount_drive:
+        drive_mounted = mount_drive_if_colab()
+
+    try:
+        return bootstrap_course_notebook(
+            preferred,
+            mount_drive=False,
+            install_requirements=install_requirements,
+            show_summary=show_summary,
+        )
+    except FileNotFoundError:
+        if not running_in_colab():
+            raise
+
+    target_dir = default_runtime_course_root(drive_mounted=drive_mounted)
+    if target_dir.exists() and not (target_dir / "src" / "course_setup.py").exists():
+        shutil.rmtree(target_dir)
+    target_dir.parent.mkdir(parents=True, exist_ok=True)
+
+    clone_repo_snapshot(repo_url, branch, target_dir)
+    return bootstrap_course_notebook(
+        target_dir,
+        mount_drive=False,
+        install_requirements=install_requirements,
+        show_summary=show_summary,
+    )
