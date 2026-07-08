@@ -9,3 +9,4 @@ ultralytics
 supervision
 mediapipe
 pyyaml
+roboflow

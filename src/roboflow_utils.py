@@ -3,12 +3,10 @@ from __future__ import annotations
 import json
 import os
 import shutil
-import zipfile
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-import requests
 import yaml
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
@@ -117,6 +115,35 @@ def _find_dataset_root(extract_dir: Path, *, expected: str) -> Path:
     raise FileNotFoundError(f"Downloaded archive did not contain a {expected} dataset.")
 
 
+def _roboflow_download_failure_message(
+    *,
+    workspace: str,
+    project: str,
+    version: int,
+    export_format: str,
+    output_dir: Path,
+    download_dir: Path,
+) -> str:
+    return (
+        "無法從 Roboflow 下載資料集。"
+        f" workspace={workspace!r}, project={project!r}, version={int(version)}, format={export_format!r}。"
+        " 請確認 Colab 有外網、API key 正確、且 Roboflow 版本已經 Publish。"
+        f" 若不走下載流程，也可以先把已匯出的資料集放到 {output_dir}。"
+        f" SDK 下載目錄預期會建立在 {download_dir}。"
+    )
+
+
+def _load_roboflow_sdk() -> type:
+    try:
+        from roboflow import Roboflow
+    except ImportError as exc:
+        raise ImportError(
+            "尚未安裝 Roboflow 官方 SDK。請先執行 `pip install roboflow`，"
+            "或在 Colab 重新執行安裝 requirements 的 bootstrap cell。"
+        ) from exc
+    return Roboflow
+
+
 def download_roboflow_dataset(
     *,
     workspace: str,
@@ -128,11 +155,7 @@ def download_roboflow_dataset(
     expected: str = "yolo",
     overwrite: bool = False,
 ) -> Path:
-    """Download a generated Roboflow dataset version and extract it into output_dir.
-
-    Uses Roboflow's REST export endpoint so students only need their API key and
-    project identifiers. The API key is never written to disk.
-    """
+    """Download a Roboflow dataset version with the official SDK into output_dir."""
     output_dir = Path(output_dir)
     if not overwrite:
         if expected == "yolo" and has_yolo_dataset(output_dir):
@@ -140,38 +163,44 @@ def download_roboflow_dataset(
         if expected == "coco-keypoints" and has_coco_keypoint_dataset(output_dir):
             return output_dir
 
-    key = _clean_api_key(api_key)
-    endpoint = f"https://api.roboflow.com/{workspace}/{project}/{int(version)}/{export_format}"
-    response = requests.get(endpoint, params={"api_key": key}, timeout=60)
-    response.raise_for_status()
-    payload = response.json()
-    export_info = payload.get("export") if isinstance(payload, dict) else None
-    download_url = None
-    if isinstance(export_info, dict):
-        download_url = export_info.get("link")
-    if download_url is None and isinstance(payload, dict):
-        download_url = payload.get("link") or payload.get("download")
-    if not isinstance(download_url, str) or not download_url:
-        raise RuntimeError("Roboflow export response did not include a download link.")
-
     cache_dir = output_dir.parent / ".roboflow_cache"
     cache_dir.mkdir(parents=True, exist_ok=True)
-    archive_path = cache_dir / f"{workspace}_{project}_v{int(version)}_{export_format}.zip"
-    if overwrite or not archive_path.exists():
-        with requests.get(download_url, stream=True, timeout=120) as download:
-            download.raise_for_status()
-            with archive_path.open("wb") as f:
-                for chunk in download.iter_content(chunk_size=1024 * 1024):
-                    if chunk:
-                        f.write(chunk)
+    extract_dir = cache_dir / f"{workspace}_{project}_v{int(version)}_{export_format}"
 
-    extract_dir = cache_dir / archive_path.stem
+    if not overwrite and extract_dir.exists():
+        try:
+            dataset_root = _find_dataset_root(extract_dir, expected=expected)
+            _copy_directory_contents(dataset_root, output_dir, overwrite=False)
+            return output_dir
+        except FileNotFoundError:
+            pass
+
     if overwrite and extract_dir.exists():
         shutil.rmtree(extract_dir)
-    if not extract_dir.exists():
-        extract_dir.mkdir(parents=True, exist_ok=True)
-        with zipfile.ZipFile(archive_path, "r") as zf:
-            zf.extractall(extract_dir)
+
+    Roboflow = _load_roboflow_sdk()
+    key = _clean_api_key(api_key)
+
+    try:
+        rf = Roboflow(api_key=key)
+        rf_project = rf.workspace(workspace).project(project)
+        rf_version = rf_project.version(int(version))
+        rf_version.download(
+            model_format=export_format,
+            location=str(extract_dir),
+            overwrite=overwrite,
+        )
+    except Exception as exc:
+        raise RuntimeError(
+            _roboflow_download_failure_message(
+                workspace=workspace,
+                project=project,
+                version=version,
+                export_format=export_format,
+                output_dir=output_dir,
+                download_dir=extract_dir,
+            )
+        ) from exc
 
     dataset_root = _find_dataset_root(extract_dir, expected=expected)
     _copy_directory_contents(dataset_root, output_dir, overwrite=overwrite)
