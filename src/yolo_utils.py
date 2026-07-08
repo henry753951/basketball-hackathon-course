@@ -17,7 +17,7 @@ from .geometry_utils import (
     project_points,
     render_bev_court,
 )
-from .video_utils import ensure_notebook_playable_mp4
+from .video_utils import ensure_notebook_playable_mp4, open_mp4_video_writer, video_fourcc
 
 BASKETBALL_CLASSES = [
     "ball",
@@ -203,7 +203,7 @@ def read_video_frame(video_path: str | Path, frame_index: int = 0) -> np.ndarray
 
 
 def mp4_fourcc() -> int:
-    return int(getattr(cv2, "VideoWriter_fourcc")(*"mp4v"))
+    return video_fourcc("avc1")
 
 
 def rgb_from_ultralytics_plot(result: Any) -> np.ndarray:
@@ -494,12 +494,7 @@ def write_detection_preview_video(
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     output_path = Path(output_path)
     ensure_dir(output_path.parent)
-    writer = cv2.VideoWriter(
-        str(output_path),
-        mp4_fourcc(),
-        fps,
-        (width, height),
-    )
+    writer, _ = open_mp4_video_writer(output_path, fps=fps, frame_size=(width, height))
     all_records: list[dict[str, Any]] = []
     frame_index = 0
     while frame_index < max_frames:
@@ -702,11 +697,10 @@ def write_court_keypoint_preview_video(
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     output_path = Path(output_path)
     ensure_dir(output_path.parent)
-    writer = cv2.VideoWriter(
-        str(output_path),
-        mp4_fourcc(),
-        fps,
-        (frame_width * 2, frame_height),
+    writer, _ = open_mp4_video_writer(
+        output_path,
+        fps=fps,
+        frame_size=(frame_width * 2, frame_height),
     )
     rows: list[dict[str, Any]] = []
     cap.set(cv2.CAP_PROP_POS_FRAMES, int(start_frame))
@@ -772,11 +766,10 @@ def write_detector_keypoint_bev_video(
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     output_path = Path(output_path)
     ensure_dir(output_path.parent)
-    writer = cv2.VideoWriter(
-        str(output_path),
-        mp4_fourcc(),
-        fps,
-        (frame_width * 2, frame_height),
+    writer, _ = open_mp4_video_writer(
+        output_path,
+        fps=fps,
+        frame_size=(frame_width * 2, frame_height),
     )
     rows: list[dict[str, Any]] = []
     cap.set(cv2.CAP_PROP_POS_FRAMES, int(start_frame))
@@ -883,11 +876,10 @@ def write_bytetrack_bev_video(
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     output_path = Path(output_path)
     ensure_dir(output_path.parent)
-    writer = cv2.VideoWriter(
-        str(output_path),
-        mp4_fourcc(),
-        fps,
-        (frame_width * 2, frame_height),
+    writer, _ = open_mp4_video_writer(
+        output_path,
+        fps=fps,
+        frame_size=(frame_width * 2, frame_height),
     )
     records: list[dict[str, Any]] = []
     paths: dict[int, list[tuple[float, float]]] = {}

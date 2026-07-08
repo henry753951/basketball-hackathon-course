@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import base64
+import os
 import shutil
 import subprocess
 import zipfile
+from functools import lru_cache
 from pathlib import Path
+from typing import Callable, cast
 
 import cv2
 from IPython.display import HTML, display
@@ -73,7 +76,8 @@ def convert_video(
     input_path = Path(input_path)
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    if shutil.which("ffmpeg") is None:
+    ffmpeg = find_ffmpeg_binary()
+    if ffmpeg is None:
         return convert_video_with_opencv(
             input_path=input_path,
             output_path=output_path,
@@ -82,7 +86,7 @@ def convert_video(
         )
     vf = f"scale='if(gt(iw,ih),{max_side},-2)':'if(gt(ih,iw),{max_side},-2)',fps={fps},format=yuv420p"
     cmd = [
-        "ffmpeg",
+        str(ffmpeg),
         "-y",
         "-i",
         str(input_path),
@@ -126,15 +130,11 @@ def convert_video_with_opencv(
     if out_h % 2 == 1:
         out_h += 1
 
-    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-    writer = cv2.VideoWriter(str(output_path), fourcc, float(fps), (out_w, out_h))
-    if not writer.isOpened():
-        cap.release()
-        raise RuntimeError(f"無法建立輸出影片：{output_path}")
+    writer, writer_codec = open_mp4_video_writer(output_path, fps=float(fps), frame_size=(out_w, out_h))
 
     print(
         "ffmpeg not found; using OpenCV fallback conversion",
-        f"({input_path.name} -> {output_path.name})",
+        f"({input_path.name} -> {output_path.name}, codec={writer_codec})",
     )
 
     frame = first_frame
@@ -161,7 +161,8 @@ def ensure_notebook_playable_mp4(
     video_path = Path(video_path)
     if not video_path.exists():
         raise FileNotFoundError(video_path)
-    if shutil.which("ffmpeg") is None:
+    ffmpeg = find_ffmpeg_binary()
+    if ffmpeg is None:
         return video_path
 
     output_path = video_path
@@ -169,7 +170,7 @@ def ensure_notebook_playable_mp4(
         output_path = video_path.with_name(video_path.stem + ".notebook.mp4")
 
     cmd = [
-        "ffmpeg",
+        str(ffmpeg),
         "-y",
         "-i",
         str(video_path),
@@ -222,6 +223,81 @@ def display_video_in_notebook(
     </video>
     """
     display(HTML(html))
+
+
+def video_fourcc(codec: str = "avc1") -> int:
+    if len(codec) != 4:
+        raise ValueError(f"codec must be exactly 4 characters, got {codec!r}")
+
+    fourcc = cast(
+        Callable[[str, str, str, str], int] | None,
+        getattr(cv2, "VideoWriter_fourcc", None),
+    )
+    if callable(fourcc):
+        return fourcc(codec[0], codec[1], codec[2], codec[3])
+
+    legacy = cast(
+        Callable[[str, str, str, str], int] | None,
+        getattr(getattr(cv2, "VideoWriter", None), "fourcc", None),
+    )
+    if callable(legacy):
+        return legacy(codec[0], codec[1], codec[2], codec[3])
+    raise RuntimeError("OpenCV does not expose a VideoWriter fourcc helper.")
+
+
+def open_mp4_video_writer(
+    output_path: str | Path,
+    *,
+    fps: float,
+    frame_size: tuple[int, int],
+    preferred_codecs: tuple[str, ...] = ("avc1", "mp4v"),
+) -> tuple[cv2.VideoWriter, str]:
+    output_path = Path(output_path)
+    for codec in preferred_codecs:
+        writer = cv2.VideoWriter(str(output_path), video_fourcc(codec), fps, frame_size)
+        if writer.isOpened():
+            return writer, codec
+        writer.release()
+    raise RuntimeError(
+        f"無法建立輸出影片：{output_path}；已嘗試 codecs={preferred_codecs!r}"
+    )
+
+
+@lru_cache(maxsize=1)
+def find_ffmpeg_binary() -> Path | None:
+    candidates: list[str | Path | None] = [
+        os.environ.get("FFMPEG_BINARY"),
+        shutil.which("ffmpeg"),
+        Path.home() / "scoop" / "shims" / "ffmpeg.exe",
+        Path.home() / "scoop" / "apps" / "ffmpeg-shared" / "current" / "bin" / "ffmpeg.exe",
+    ]
+    candidates.extend(sorted((Path.home() / "scoop" / "apps" / "ffmpeg-shared").glob("*/bin/ffmpeg.exe"), reverse=True))
+    candidates.append(
+        Path(os.environ.get("ProgramFiles", r"C:\Program Files"))
+        / "Softdeluxe"
+        / "Free Download Manager"
+        / "ffmpeg.exe"
+    )
+    for candidate in candidates:
+        if not candidate:
+            continue
+        path = Path(candidate)
+        if path.exists() and ffmpeg_supports_h264(path):
+            return path
+    return None
+
+
+def ffmpeg_supports_h264(ffmpeg_path: str | Path) -> bool:
+    try:
+        result = subprocess.run(
+            [str(ffmpeg_path), "-hide_banner", "-loglevel", "error", "-encoders"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return False
+    return "libx264" in result.stdout
 
 
 def convert_all_raw_videos(

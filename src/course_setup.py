@@ -10,6 +10,8 @@ import shutil
 
 DEFAULT_COURSE_ROOT = Path("/content/drive/MyDrive/basketball_hackathon/course")
 DEFAULT_DRIVE_MOUNT_POINT = "/content/drive"
+DEFAULT_LOCAL_RUNTIME_ROOT = Path("/content/basketball_hackathon/course")
+DEFAULT_LOCAL_CLONE_ROOT = Path("/content/basketball_hackathon_course")
 DEFAULT_REPO_SYNC_EXCLUDES = (
     ".git",
     ".github",
@@ -23,11 +25,16 @@ DEFAULT_PRESERVE_PATHS = ("assets/results",)
 def find_course_root(preferred: str | Path | None = None) -> Path:
     """從 Colab Drive 路徑或本機 repo 尋找課程根目錄。"""
     candidates: list[Path] = []
+    env_root = os.environ.get("BASKETBALL_HACKATHON_COURSE_ROOT")
     if preferred is not None:
         candidates.append(Path(preferred))
+    if env_root:
+        candidates.append(Path(env_root))
     candidates.extend(
         [
             DEFAULT_COURSE_ROOT,
+            DEFAULT_LOCAL_RUNTIME_ROOT,
+            DEFAULT_LOCAL_CLONE_ROOT,
             Path.cwd(),
             *Path.cwd().parents,
         ]
@@ -58,14 +65,25 @@ def running_in_colab() -> bool:
     return True
 
 
+def colab_drive_mount_supported() -> bool:
+    return Path("/var/colab/hostname").exists()
+
+
 def mount_drive_if_colab(mount_point: str = DEFAULT_DRIVE_MOUNT_POINT) -> bool:
     """在 Colab 中掛載 Google Drive；本機執行時直接略過。"""
     if not running_in_colab():
         return False
+    if not colab_drive_mount_supported():
+        print("目前 Colab runtime 不支援 google.colab.drive.mount，改用本機 /content 路徑。")
+        return False
 
     from google.colab import drive  # type: ignore[import-not-found]
 
-    drive.mount(mount_point)
+    try:
+        drive.mount(mount_point)
+    except NotImplementedError:
+        print("目前 Colab runtime 不支援 google.colab.drive.mount，改用本機 /content 路徑。")
+        return False
     return True
 
 
@@ -249,3 +267,20 @@ def bootstrap_course_notebook(
         print_environment_summary(course_root)
 
     return course_root
+
+
+def bootstrap_candidates() -> list[Path]:
+    env_root = os.environ.get("BASKETBALL_HACKATHON_COURSE_ROOT")
+    candidates: list[Path] = []
+    if env_root:
+        candidates.append(Path(env_root))
+    candidates.extend(
+        [
+            DEFAULT_COURSE_ROOT,
+            DEFAULT_LOCAL_RUNTIME_ROOT,
+            DEFAULT_LOCAL_CLONE_ROOT,
+            Path.cwd().resolve(),
+            *Path.cwd().resolve().parents,
+        ]
+    )
+    return candidates

@@ -2,11 +2,18 @@ from __future__ import annotations
 
 import math
 from pathlib import Path
-from typing import cast
+from typing import Literal, cast
 
 import cv2
+import mediapipe as mp
 import numpy as np
 import pandas as pd
+import requests
+
+_POSE_LANDMARKER_LITE_URL = (
+    "https://storage.googleapis.com/mediapipe-models/pose_landmarker/"
+    "pose_landmarker_lite/float16/1/pose_landmarker_lite.task"
+)
 
 
 def _row_float(row: pd.Series, key: str) -> float:
@@ -59,6 +66,119 @@ def synthetic_pose_sequence(n: int = 80) -> pd.DataFrame:
         )
     df = pd.DataFrame(rows)
     return add_pose_angles(df)
+
+
+def mediapipe_pose_model_path(course_root: str | Path) -> Path:
+    return Path(course_root) / "assets" / "models" / "mediapipe" / "pose_landmarker_lite.task"
+
+
+def ensure_mediapipe_pose_model(course_root: str | Path) -> Path:
+    model_path = mediapipe_pose_model_path(course_root)
+    if model_path.exists():
+        return model_path
+    model_path.parent.mkdir(parents=True, exist_ok=True)
+    response = requests.get(_POSE_LANDMARKER_LITE_URL, timeout=120)
+    response.raise_for_status()
+    model_path.write_bytes(response.content)
+    return model_path
+
+
+def extract_pose_sequence_mediapipe_tasks(
+    video_path: str | Path,
+    *,
+    course_root: str | Path,
+    stride: int = 5,
+    side: Literal["right", "left"] = "right",
+    min_pose_detection_confidence: float = 0.4,
+    min_pose_presence_confidence: float = 0.4,
+    min_tracking_confidence: float = 0.4,
+) -> pd.DataFrame:
+    from mediapipe.tasks.python import BaseOptions, vision
+
+    if stride <= 0:
+        raise ValueError(f"stride must be >= 1, got {stride}")
+
+    model_path = ensure_mediapipe_pose_model(course_root)
+    options = vision.PoseLandmarkerOptions(
+        base_options=BaseOptions(model_asset_path=str(model_path)),
+        running_mode=vision.RunningMode.VIDEO,
+        num_poses=1,
+        min_pose_detection_confidence=min_pose_detection_confidence,
+        min_pose_presence_confidence=min_pose_presence_confidence,
+        min_tracking_confidence=min_tracking_confidence,
+    )
+
+    side_prefix = side.upper()
+    landmark_names = {
+        "shoulder": f"{side_prefix}_SHOULDER",
+        "elbow": f"{side_prefix}_ELBOW",
+        "wrist": f"{side_prefix}_WRIST",
+        "hip": f"{side_prefix}_HIP",
+        "knee": f"{side_prefix}_KNEE",
+        "ankle": f"{side_prefix}_ANKLE",
+    }
+
+    cap = cv2.VideoCapture(str(video_path))
+    if not cap.isOpened():
+        raise FileNotFoundError(video_path)
+    fps = float(cap.get(cv2.CAP_PROP_FPS) or 30.0)
+
+    rows: list[dict[str, float | int]] = []
+    frame_idx = 0
+    with vision.PoseLandmarker.create_from_options(options) as landmarker:
+        while cap.isOpened():
+            ok, frame_bgr = cap.read()
+            if not ok:
+                break
+            if frame_idx % stride != 0:
+                frame_idx += 1
+                continue
+
+            frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+            height, width = frame_rgb.shape[:2]
+            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame_rgb)
+            timestamp_ms = int(round(frame_idx * 1000.0 / max(fps, 1e-6)))
+            result = landmarker.detect_for_video(mp_image, timestamp_ms)
+
+            if result.pose_landmarks:
+                landmarks = result.pose_landmarks[0]
+
+                def pt(name: str) -> tuple[float, float]:
+                    point = landmarks[int(getattr(vision.PoseLandmark, name))]
+                    return point.x * width, point.y * height
+
+                shoulder = pt(landmark_names["shoulder"])
+                elbow = pt(landmark_names["elbow"])
+                wrist = pt(landmark_names["wrist"])
+                hip = pt(landmark_names["hip"])
+                knee = pt(landmark_names["knee"])
+                ankle = pt(landmark_names["ankle"])
+                rows.append(
+                    {
+                        "frame": frame_idx,
+                        "shoulder_x": shoulder[0],
+                        "shoulder_y": shoulder[1],
+                        "elbow_x": elbow[0],
+                        "elbow_y": elbow[1],
+                        "wrist_x": wrist[0],
+                        "wrist_y": wrist[1],
+                        "hip_x": hip[0],
+                        "hip_y": hip[1],
+                        "knee_x": knee[0],
+                        "knee_y": knee[1],
+                        "ankle_x": ankle[0],
+                        "ankle_y": ankle[1],
+                    }
+                )
+            frame_idx += 1
+    cap.release()
+
+    if not rows:
+        raise RuntimeError(
+            "MediaPipe Tasks Pose Landmarker 沒有從影片偵測到任何 pose landmarks。"
+            "請確認 side.mp4 為清楚的側拍投籃影片，或調整拍攝角度、距離與光線。"
+        )
+    return add_pose_angles(pd.DataFrame(rows))
 
 
 def add_pose_angles(df: pd.DataFrame) -> pd.DataFrame:
