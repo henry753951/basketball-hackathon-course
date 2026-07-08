@@ -82,7 +82,7 @@ def mount_drive_if_colab(mount_point: str = DEFAULT_DRIVE_MOUNT_POINT) -> bool:
     from google.colab import drive  # type: ignore[import-not-found]
 
     try:
-        drive.mount(mount_point)
+        drive.mount(mount_point, force_remount=True)
     except NotImplementedError:
         print("目前 Colab runtime 不支援 google.colab.drive.mount，改用本機 /content 路徑。")
         return False
