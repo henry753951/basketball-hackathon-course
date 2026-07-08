@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Sequence
@@ -154,6 +155,34 @@ def court_keypoint_model_path(course_root: str | Path) -> Path:
         / "court_keypoints"
         / "yolo26n_basketball_court_pose_best.pt"
     )
+
+
+def original_model_backup_path(model_path: str | Path) -> Path:
+    model_path = Path(model_path)
+    return model_path.with_name(f"{model_path.stem}_original{model_path.suffix}")
+
+
+def provided_court_keypoint_model_path(course_root: str | Path) -> Path:
+    model_path = court_keypoint_model_path(course_root)
+    backup_path = original_model_backup_path(model_path)
+    return backup_path if backup_path.exists() else model_path
+
+
+def promote_trained_model(
+    trained_model_path: str | Path,
+    production_model_path: str | Path,
+) -> tuple[Path, Path]:
+    trained_model_path = Path(trained_model_path)
+    production_model_path = Path(production_model_path)
+    if not trained_model_path.exists():
+        raise FileNotFoundError(trained_model_path)
+
+    production_model_path.parent.mkdir(parents=True, exist_ok=True)
+    backup_path = original_model_backup_path(production_model_path)
+    if production_model_path.exists() and not backup_path.exists():
+        shutil.move(str(production_model_path), str(backup_path))
+    shutil.copy2(trained_model_path, production_model_path)
+    return production_model_path, backup_path
 
 
 def reference_videos(course_root: str | Path) -> list[Path]:
