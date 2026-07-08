@@ -234,7 +234,7 @@ def video_fourcc(codec: str = "avc1") -> int:
         getattr(cv2, "VideoWriter_fourcc", None),
     )
     if callable(fourcc):
-        return fourcc(codec[0], codec[1], codec[2], codec[3])
+        return fourcc(codec[0], codec[1], codec[2], codec[3]) # pyright: ignore[reportReturnType]
 
     legacy = cast(
         Callable[[str, str, str, str], int] | None,
