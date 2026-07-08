@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
+import zipfile
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
+import requests
 import yaml
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
@@ -72,6 +75,181 @@ def dataset_status(path: str | Path) -> dict[str, Any]:
     return status
 
 
+def has_yolo_dataset(path: str | Path) -> bool:
+    return (Path(path) / "data.yaml").exists()
+
+
+def has_coco_keypoint_dataset(path: str | Path) -> bool:
+    root = Path(path)
+    return any(find_coco_annotation(root / split) is not None for split in ("train", "valid", "test"))
+
+
+def _clean_api_key(api_key: str | None = None) -> str:
+    value = (api_key or os.getenv("ROBOFLOW_API_KEY") or "").strip()
+    if not value or value == "YOUR_API_KEY":
+        raise ValueError("請填入 Roboflow API key，或設定環境變數 ROBOFLOW_API_KEY。")
+    return value
+
+
+def _copy_directory_contents(src: Path, dst: Path, *, overwrite: bool) -> None:
+    if dst.exists() and overwrite:
+        shutil.rmtree(dst)
+    dst.mkdir(parents=True, exist_ok=True)
+    for child in src.iterdir():
+        target = dst / child.name
+        if child.is_dir():
+            shutil.copytree(child, target, dirs_exist_ok=True)
+        elif overwrite or not target.exists():
+            shutil.copy2(child, target)
+
+
+def _find_dataset_root(extract_dir: Path, *, expected: str) -> Path:
+    if expected == "yolo":
+        matches = sorted(extract_dir.rglob("data.yaml"))
+        if matches:
+            return matches[0].parent
+    elif expected == "coco-keypoints":
+        for candidate in [extract_dir, *sorted(p for p in extract_dir.rglob("*") if p.is_dir())]:
+            if has_coco_keypoint_dataset(candidate):
+                return candidate
+    else:
+        raise ValueError(f"Unsupported expected dataset type: {expected}")
+    raise FileNotFoundError(f"Downloaded archive did not contain a {expected} dataset.")
+
+
+def download_roboflow_dataset(
+    *,
+    workspace: str,
+    project: str,
+    version: int,
+    export_format: str,
+    output_dir: str | Path,
+    api_key: str | None = None,
+    expected: str = "yolo",
+    overwrite: bool = False,
+) -> Path:
+    """Download a generated Roboflow dataset version and extract it into output_dir.
+
+    Uses Roboflow's REST export endpoint so students only need their API key and
+    project identifiers. The API key is never written to disk.
+    """
+    output_dir = Path(output_dir)
+    if not overwrite:
+        if expected == "yolo" and has_yolo_dataset(output_dir):
+            return output_dir
+        if expected == "coco-keypoints" and has_coco_keypoint_dataset(output_dir):
+            return output_dir
+
+    key = _clean_api_key(api_key)
+    endpoint = f"https://api.roboflow.com/{workspace}/{project}/{int(version)}/{export_format}"
+    response = requests.get(endpoint, params={"api_key": key}, timeout=60)
+    response.raise_for_status()
+    payload = response.json()
+    export_info = payload.get("export") if isinstance(payload, dict) else None
+    download_url = None
+    if isinstance(export_info, dict):
+        download_url = export_info.get("link")
+    if download_url is None and isinstance(payload, dict):
+        download_url = payload.get("link") or payload.get("download")
+    if not isinstance(download_url, str) or not download_url:
+        raise RuntimeError("Roboflow export response did not include a download link.")
+
+    cache_dir = output_dir.parent / ".roboflow_cache"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    archive_path = cache_dir / f"{workspace}_{project}_v{int(version)}_{export_format}.zip"
+    if overwrite or not archive_path.exists():
+        with requests.get(download_url, stream=True, timeout=120) as download:
+            download.raise_for_status()
+            with archive_path.open("wb") as f:
+                for chunk in download.iter_content(chunk_size=1024 * 1024):
+                    if chunk:
+                        f.write(chunk)
+
+    extract_dir = cache_dir / archive_path.stem
+    if overwrite and extract_dir.exists():
+        shutil.rmtree(extract_dir)
+    if not extract_dir.exists():
+        extract_dir.mkdir(parents=True, exist_ok=True)
+        with zipfile.ZipFile(archive_path, "r") as zf:
+            zf.extractall(extract_dir)
+
+    dataset_root = _find_dataset_root(extract_dir, expected=expected)
+    _copy_directory_contents(dataset_root, output_dir, overwrite=overwrite)
+    metadata = {
+        "workspace": workspace,
+        "project": project,
+        "version": int(version),
+        "format": export_format,
+        "expected": expected,
+    }
+    (output_dir / ".roboflow_download.json").write_text(
+        json.dumps(metadata, indent=2),
+        encoding="utf-8",
+    )
+    return output_dir
+
+
+def ensure_roboflow_detection_dataset(
+    output_dir: str | Path,
+    *,
+    workspace: str,
+    project: str,
+    version: int,
+    api_key: str | None = None,
+    export_format: str = "yolov8",
+    overwrite: bool = False,
+) -> Path:
+    output_dir = Path(output_dir)
+    if has_yolo_dataset(output_dir) and not overwrite:
+        return output_dir / "data.yaml"
+    download_roboflow_dataset(
+        workspace=workspace,
+        project=project,
+        version=version,
+        export_format=export_format,
+        output_dir=output_dir,
+        api_key=api_key,
+        expected="yolo",
+        overwrite=overwrite,
+    )
+    return output_dir / "data.yaml"
+
+
+def ensure_roboflow_court_pose_dataset(
+    *,
+    coco_dir: str | Path,
+    yolo_pose_dir: str | Path,
+    workspace: str,
+    project: str,
+    version: int,
+    api_key: str | None = None,
+    export_format: str = "coco",
+    overwrite_download: bool = False,
+    overwrite_conversion: bool = False,
+) -> Path:
+    coco_dir = Path(coco_dir)
+    yolo_pose_dir = Path(yolo_pose_dir)
+    if not has_coco_keypoint_dataset(coco_dir) or overwrite_download:
+        download_roboflow_dataset(
+            workspace=workspace,
+            project=project,
+            version=version,
+            export_format=export_format,
+            output_dir=coco_dir,
+            api_key=api_key,
+            expected="coco-keypoints",
+            overwrite=overwrite_download,
+        )
+    data_yaml = yolo_pose_dir / "data.yaml"
+    if data_yaml.exists() and not overwrite_conversion:
+        return data_yaml
+    return convert_roboflow_coco_keypoints_to_yolo_pose(
+        coco_dir,
+        yolo_pose_dir,
+        overwrite=overwrite_conversion,
+    )
+
+
 def find_coco_annotation(split_dir: Path) -> Path | None:
     for name in ("_annotations.coco.json", "_annotations.json", "annotations.json"):
         candidate = split_dir / name
@@ -107,8 +285,20 @@ def _infer_keypoint_metadata(coco: dict[str, Any]) -> tuple[list[str], list[list
     categories = sorted(coco.get("categories") or [], key=lambda c: int(c.get("id", 0)))
     if not categories:
         raise ValueError("COCO categories are missing.")
-    class_id_map = {int(cat["id"]): idx for idx, cat in enumerate(categories)}
-    names = [str(cat.get("name", f"class_{idx}")) for idx, cat in enumerate(categories)]
+    used_category_ids = {
+        int(ann["category_id"])
+        for ann in coco.get("annotations") or []
+        if not ann.get("iscrowd", 0) and "category_id" in ann
+    }
+    if not used_category_ids:
+        used_category_ids = {int(cat["id"]) for cat in categories}
+    class_id_map = {category_id: idx for idx, category_id in enumerate(sorted(used_category_ids))}
+    names_by_id = {
+        class_id_map[int(cat["id"])]: str(cat.get("name", f"class_{idx}"))
+        for idx, cat in enumerate(categories)
+        if int(cat["id"]) in class_id_map
+    }
+    names = [names_by_id[idx] for idx in sorted(names_by_id)]
     keypoint_names: list[str] = []
     skeleton: list[list[int]] = []
     for cat in categories:

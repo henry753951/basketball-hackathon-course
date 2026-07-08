@@ -73,6 +73,13 @@ def convert_video(
     input_path = Path(input_path)
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    if shutil.which("ffmpeg") is None:
+        return convert_video_with_opencv(
+            input_path=input_path,
+            output_path=output_path,
+            fps=fps,
+            max_side=max_side,
+        )
     vf = f"scale='if(gt(iw,ih),{max_side},-2)':'if(gt(ih,iw),{max_side},-2)',fps={fps},format=yuv420p"
     cmd = [
         "ffmpeg",
@@ -92,6 +99,54 @@ def convert_video(
     ]
     print("$", " ".join(cmd))
     subprocess.run(cmd, check=True)
+    return output_path
+
+
+def convert_video_with_opencv(
+    input_path: str | Path, output_path: str | Path, fps: int = 30, max_side: int = 1280
+) -> Path:
+    """Fallback video conversion when ffmpeg is unavailable on the machine."""
+    input_path = Path(input_path)
+    output_path = Path(output_path)
+    cap = cv2.VideoCapture(str(input_path))
+    if not cap.isOpened():
+        raise FileNotFoundError(input_path)
+
+    ok, first_frame = cap.read()
+    if not ok:
+        cap.release()
+        raise RuntimeError(f"無法讀取影片內容：{input_path}")
+
+    src_h, src_w = first_frame.shape[:2]
+    scale = min(1.0, max_side / max(src_w, src_h))
+    out_w = max(2, int(round(src_w * scale)))
+    out_h = max(2, int(round(src_h * scale)))
+    if out_w % 2 == 1:
+        out_w += 1
+    if out_h % 2 == 1:
+        out_h += 1
+
+    fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+    writer = cv2.VideoWriter(str(output_path), fourcc, float(fps), (out_w, out_h))
+    if not writer.isOpened():
+        cap.release()
+        raise RuntimeError(f"無法建立輸出影片：{output_path}")
+
+    print(
+        "ffmpeg not found; using OpenCV fallback conversion",
+        f"({input_path.name} -> {output_path.name})",
+    )
+
+    frame = first_frame
+    while True:
+        resized = cv2.resize(frame, (out_w, out_h), interpolation=cv2.INTER_AREA)
+        writer.write(resized)
+        ok, frame = cap.read()
+        if not ok:
+            break
+
+    writer.release()
+    cap.release()
     return output_path
 
 

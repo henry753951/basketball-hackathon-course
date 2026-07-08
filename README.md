@@ -85,6 +85,30 @@ course/
 
 Day 4-03 的 `track_orange_ball` 是顏色式基準方法，僅用於建立球中心點、速度與出手 frame 的資料格式。在正式專案中，建議使用 Ultralytics YOLO 類型的 object detector 偵測籃球，類別至少包含 `ball`；若任務包含進球判斷，可加入 `ball-in-basket`、rim 或 backboard。
 
+### Roboflow Dataset 自動下載
+
+Detection 與 court keypoint 訓練 notebook 支援學生輸入 Roboflow API key 後自動下載自己的標註資料：
+
+- `day1/d1_03_bbox_homework_setup.ipynb`、`day2/d2_03_roboflow_bbox_training.ipynb`：下載 `yolov8` detection export，目標位置是 `assets/datasets/roboflow_bbox_yolo/`。
+- `day1/d1_02_keypoint_annotation_roboflow_lab.ipynb`：下載 `coco` keypoint export，目標位置是 `assets/datasets/roboflow_court_coco/`，再自動轉成 YOLO pose dataset `assets/datasets/roboflow_court_yolo_pose/`。
+- Notebook 會先檢查資料是否已下載或已轉換；已存在時直接沿用。需要重抓或重轉時，設定 notebook 內的 `FORCE_DOWNLOAD = True` 或 `FORCE_CONVERSION = True`。
+
+學生在 Roboflow 網頁完成標註後，還需要手動到專案的 `Versions` 頁面按 `Generate New Version` / `Publish`。只有已發布的 dataset version 才能被 notebook 的 API 下載流程抓到。建議學生依照下列順序操作：
+
+1. 在 Roboflow 網頁完成標註或修正標註。
+2. 到 `Versions` 頁建立新的 dataset version。
+3. 記下 `workspace slug`、`project slug`、新的 `version number`。
+4. 回到 notebook，把 `USE_ROBOFLOW_DOWNLOAD = True`，再填入 `ROBOFLOW_WORKSPACE`、`ROBOFLOW_PROJECT`、`ROBOFLOW_VERSION`。
+5. `ROBOFLOW_API_KEY` 可留空，執行 cell 時會用 `getpass()` 安全輸入。
+
+若課程使用示範用的 court keypoint 專案 `basketball-court-detection-2-85wob`（https://universe.roboflow.com/roboflow-jvuqo/basketball-court-detection-2），其中有 5 張 `train` 圖片會刻意保留為未標註，並加上 `needs-annotation` tag，方便學生 fork 後練習補標：
+
+- `boston-celtics-new-york-knicks-game-1-q1-01_54-01_48_mp4-0000.jpg`
+- `boston-celtics-new-york-knicks-game-1-q1-01_54-01_48_mp4-0001.jpg`
+- `boston-celtics-new-york-knicks-game-1-q1-01_54-01_48_mp4-0002.jpg`
+- `boston-celtics-new-york-knicks-game-1-q1-01_54-01_48_mp4-0003.jpg`
+- `boston-celtics-new-york-knicks-game-1-q1-01_54-01_48_mp4-0004.jpg`
+
 偵測結果再交由 ByteTrack 或 BoT-SORT 做跨 frame 關聯；短暫漏偵可用插值補齊。球體尺寸小、移動快且容易遮擋，訓練資料應涵蓋不同拍攝角度、場地光線、球衣顏色與壓縮品質。
 
 ## 建議上課順序
