@@ -11,6 +11,7 @@ dependencies = [
     "pillow>=12.2.0",
     "pyyaml>=6.0.3",
     "requests>=2.34.2",
+    "roboflow>=0.1.1",
     "supervision>=0.28.0",
     "tqdm>=4.68.2",
     "ultralytics>=8.4.63",
