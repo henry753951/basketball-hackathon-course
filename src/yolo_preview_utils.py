@@ -274,6 +274,7 @@ def write_bytetrack_preview_video(
     start_frame: int = 0,
     class_names_override: Sequence[str] | dict[int, str] | None = None,
     keep_class_names: Iterable[str] | None = None,
+    hold_last_ball_frames: int = 3,
 ) -> tuple[Path, list[dict[str, Any]]]:
     from .yolo_utils import detections_from_result, load_yolo_model
     import supervision as sv
@@ -291,8 +292,14 @@ def write_bytetrack_preview_video(
     writer, _ = open_mp4_video_writer(output_path, fps=fps, frame_size=(frame_width, frame_height))
     records: list[dict[str, Any]] = []
     local_frame_index = 0
+    last_ball_record: dict[str, Any] | None = None
     try:
-        tracker = sv.ByteTrack(frame_rate=float(fps))
+        tracker = sv.ByteTrack(
+            frame_rate=float(fps),
+            track_activation_threshold=max(0.001, min(conf * 2.0, 0.1)),
+            lost_track_buffer=max(20, int(round(fps * 0.6))),
+            minimum_matching_threshold=0.65,
+        )
     except TypeError:
         tracker = sv.ByteTrack()
 
@@ -317,17 +324,72 @@ def write_bytetrack_preview_video(
             detections = [det for det in detections if det.class_name in keep_names]
         sv_detections = _supervision_from_detection_records(detections)
         tracked = tracker.update_with_detections(sv_detections)
+        display_detections = tracked
         labels = _labels_from_supervision_detections(tracked)
-        frame_vis = _annotate_detection_scene(frame_rgb, tracked, labels=labels, trace=True)
+        trace_enabled = True
+        record_source = "track"
+
+        if len(display_detections) == 0 and len(sv_detections) > 0:
+            display_detections = sv_detections
+            labels = _labels_from_supervision_detections(display_detections)
+            trace_enabled = False
+            record_source = "detect"
+        elif (
+            len(display_detections) == 0
+            and last_ball_record is not None
+            and hold_last_ball_frames > 0
+            and source_frame_index - int(last_ball_record["frame"]) <= hold_last_ball_frames
+        ):
+            carry_record = dict(last_ball_record)
+            carry_record["frame"] = int(source_frame_index)
+            carry_record["source"] = "carry"
+            display_detections = _supervision_from_detection_records(
+                [
+                    type(
+                        "CarryDetection",
+                        (),
+                        {
+                            "bbox_xyxy": carry_record["bbox_xyxy"],
+                            "class_id": carry_record["class_id"],
+                            "confidence": carry_record["confidence"],
+                            "track_id": carry_record["track_id"],
+                            "class_name": carry_record["class_name"],
+                        },
+                    )()
+                ]
+            )
+            labels = [f"#{carry_record['track_id']} {carry_record['class_name']} hold"]
+            trace_enabled = False
+            record_source = "carry"
+
+        frame_vis = _annotate_detection_scene(
+            frame_rgb,
+            display_detections,
+            labels=labels,
+            trace=trace_enabled,
+        )
         writer.write(cv2.cvtColor(frame_vis, cv2.COLOR_RGB2BGR))
 
-        xyxy = np.asarray(tracked.xyxy, dtype=float)
-        tracker_ids = tracked.tracker_id if tracked.tracker_id is not None else np.arange(len(tracked))
-        class_ids = tracked.class_id if tracked.class_id is not None else np.full(len(tracked), -1)
-        class_names = tracked.data.get("class_name", ["player"] * len(tracked))
-        confidences = tracked.confidence if tracked.confidence is not None else np.ones(len(tracked), dtype=float)
-        for i in range(len(tracked)):
-            records.append(
+        xyxy = np.asarray(display_detections.xyxy, dtype=float)
+        tracker_ids = (
+            display_detections.tracker_id
+            if display_detections.tracker_id is not None
+            else np.full(len(display_detections), -1, dtype=int)
+        )
+        class_ids = (
+            display_detections.class_id
+            if display_detections.class_id is not None
+            else np.full(len(display_detections), -1, dtype=int)
+        )
+        class_names = display_detections.data.get("class_name", ["player"] * len(display_detections))
+        confidences = (
+            display_detections.confidence
+            if display_detections.confidence is not None
+            else np.ones(len(display_detections), dtype=float)
+        )
+        frame_records: list[dict[str, Any]] = []
+        for i in range(len(display_detections)):
+            frame_records.append(
                 {
                     "frame": int(source_frame_index),
                     "track_id": int(tracker_ids[i]),
@@ -335,8 +397,13 @@ def write_bytetrack_preview_video(
                     "class_name": str(class_names[i]),
                     "confidence": float(confidences[i]),
                     "bbox_xyxy": [float(v) for v in xyxy[i].tolist()],
+                    "source": record_source,
                 }
             )
+        if frame_records:
+            best_record = max(frame_records, key=lambda item: float(item["confidence"]))
+            last_ball_record = dict(best_record)
+        records.extend(frame_records)
         local_frame_index += 1
         source_frame_index += 1
 
