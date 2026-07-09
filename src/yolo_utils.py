@@ -4,10 +4,11 @@ import copy
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Sequence
+from typing import Any, Iterable, Mapping, Sequence
 import random
 import cv2
 import numpy as np
+import pandas as pd
 
 from .cv_utils import bottom_center, draw_boxes, draw_points, ensure_dir, load_json, save_json
 from .geometry_utils import (
@@ -19,7 +20,12 @@ from .geometry_utils import (
     project_points,
     render_bev_court,
 )
-from .video_utils import ensure_notebook_playable_mp4, open_mp4_video_writer, video_fourcc
+from .video_utils import (
+    download_file,
+    ensure_notebook_playable_mp4,
+    open_mp4_video_writer,
+    video_fourcc,
+)
 
 BASKETBALL_CLASSES = [
     "ball",
@@ -33,6 +39,7 @@ BASKETBALL_CLASSES = [
     "referee",
     "rim",
 ]
+
 
 COURT_LABELS = [
     "01",
@@ -147,6 +154,60 @@ def detector_model_path(course_root: str | Path) -> Path:
     )
 
 
+def ball_detector_model_path(course_root: str | Path) -> Path:
+    return (
+        Path(course_root) / "assets" / "models" / "detectors" / "yolo26n_basketball_ball_best.pt"
+    )
+
+
+def latest_ball_detector_training_best_path(course_root: str | Path) -> Path:
+    training_root = (
+        Path(course_root)
+        / "assets"
+        / "results"
+        / "training"
+        / "ball_detection"
+    )
+    candidates = sorted(
+        training_root.glob("*/weights/best.pt"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    if not candidates:
+        raise FileNotFoundError(
+            "找不到任何 ball detector 訓練結果。請先完成 Day 4-01 的訓練。"
+        )
+    return candidates[0]
+
+
+def preferred_ball_detector_preview_model_path(course_root: str | Path) -> Path:
+    published = ball_detector_model_path(course_root)
+    if published.exists():
+        return published
+    return latest_ball_detector_training_best_path(course_root)
+
+
+def pretrained_model_dir(course_root: str | Path) -> Path:
+    return Path(course_root) / "assets" / "models" / "pretrained"
+
+
+def yolo26n_pretrained_path(course_root: str | Path) -> Path:
+    return pretrained_model_dir(course_root) / "yolo26n.pt"
+
+
+def ensure_yolo26n_pretrained_weights(course_root: str | Path) -> Path:
+    target = yolo26n_pretrained_path(course_root)
+    if target.exists():
+        return target
+    download_file(
+        "https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt",
+        target,
+    )
+    return target
+
+
+
+
 def court_keypoint_model_path(course_root: str | Path) -> Path:
     return (
         Path(course_root)
@@ -250,11 +311,27 @@ def _result_names(result: Any) -> dict[int, str]:
     return {int(k): str(v) for k, v in dict(names).items()}
 
 
-def detections_from_result(result: Any, frame_index: int = 0) -> list[DetectionRecord]:
+def _class_name_lookup(
+    result: Any,
+    class_names_override: Sequence[str] | Mapping[int, str] | None = None,
+) -> dict[int, str]:
+    if class_names_override is None:
+        return _result_names(result)
+    if isinstance(class_names_override, Mapping):
+        return {int(k): str(v) for k, v in class_names_override.items()}
+    return {idx: str(name) for idx, name in enumerate(class_names_override)}
+
+
+def detections_from_result(
+    result: Any,
+    frame_index: int = 0,
+    *,
+    class_names_override: Sequence[str] | Mapping[int, str] | None = None,
+) -> list[DetectionRecord]:
     boxes = getattr(result, "boxes", None)
     if boxes is None or len(boxes) == 0:
         return []
-    names = _result_names(result)
+    names = _class_name_lookup(result, class_names_override)
     records: list[DetectionRecord] = []
     for i in range(len(boxes)):
         box = boxes[i]
@@ -279,10 +356,17 @@ def run_detector_on_image(
     conf: float = 0.25,
     imgsz: int = 960,
     frame_index: int = 0,
+    class_names_override: Sequence[str] | Mapping[int, str] | None = None,
 ) -> tuple[list[DetectionRecord], Any]:
     model = load_yolo_model(model_path)
     result = model.predict(image_rgb, conf=conf, imgsz=imgsz, verbose=False)[0]
-    return detections_from_result(result, frame_index=frame_index), result
+    return detections_from_result(
+        result,
+        frame_index=frame_index,
+        class_names_override=class_names_override,
+    ), result
+
+
 
 
 def _predict_stretched_result(
@@ -346,30 +430,6 @@ def predict_court_pose_result(
 ) -> Any:
     """Run court pose inference with the square-stretch preprocessing used during labeling."""
     return _predict_stretched_result(model, image_rgb, conf=conf, imgsz=imgsz)
-
-
-def draw_detection_records(
-    image_rgb: np.ndarray,
-    detections: Sequence[DetectionRecord],
-    *,
-    class_names: Iterable[str] | None = None,
-    max_items: int | None = None,
-) -> np.ndarray:
-    keep = list(detections)
-    if class_names is not None:
-        allowed = set(class_names)
-        keep = [det for det in keep if det.class_name in allowed]
-    if max_items is not None:
-        keep = keep[:max_items]
-    labels = [
-        (
-            f"ID {det.track_id} {det.class_name} {det.confidence:.2f}"
-            if det.track_id is not None
-            else f"{det.class_name} {det.confidence:.2f}"
-        )
-        for det in keep
-    ]
-    return draw_boxes(image_rgb, [det.bbox_xyxy for det in keep], labels)
 
 
 def draw_court_keypoint_records(
@@ -574,43 +634,18 @@ def records_to_dicts(
     return [record.__dict__ for record in records]
 
 
-def write_detection_preview_video(
-    *,
-    video_path: str | Path,
-    model_path: str | Path,
-    output_path: str | Path,
-    max_frames: int = 45,
-    conf: float = 0.25,
-    imgsz: int = 960,
-) -> tuple[Path, list[dict[str, Any]]]:
-    model = load_yolo_model(model_path)
-    cap = cv2.VideoCapture(str(video_path))
-    if not cap.isOpened():
-        raise FileNotFoundError(video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    output_path = Path(output_path)
-    ensure_dir(output_path.parent)
-    writer, _ = open_mp4_video_writer(output_path, fps=fps, frame_size=(width, height))
-    all_records: list[dict[str, Any]] = []
-    frame_index = 0
-    while frame_index < max_frames:
-        ok, frame_bgr = cap.read()
-        if not ok:
-            break
-        frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-        result = predict_court_pose_result(model, frame_rgb, conf=conf, imgsz=imgsz)
-        detections = detections_from_result(result, frame_index=frame_index)
-        all_records.extend(records_to_dicts(detections))
-        vis_rgb = rgb_from_ultralytics_plot(result)
-        writer.write(cv2.cvtColor(vis_rgb, cv2.COLOR_RGB2BGR))
-        frame_index += 1
-    cap.release()
-    writer.release()
-    ensure_notebook_playable_mp4(output_path)
-    save_json(all_records, output_path.with_suffix(".json"))
-    return output_path, all_records
+from .yolo_preview_utils import (
+    _annotate_detection_scene,
+    _detections_to_supervision,
+    _labels_from_detection_records,
+    _labels_from_supervision_detections,
+    ball_track_dataframe_from_tracking_records,
+    draw_detection_records,
+    write_bytetrack_preview_video,
+    write_detection_preview_video,
+)
+
+
 
 
 def _player_detections(records: Sequence[DetectionRecord]) -> list[DetectionRecord]:
@@ -833,6 +868,8 @@ def write_court_keypoint_preview_video(
         local_frame_index += 1
     cap.release()
     writer.release()
+    if local_frame_index == 0:
+        raise RuntimeError(f"Keypoint BEV 預覽影片沒有寫出任何 frame：{output_path}")
     ensure_notebook_playable_mp4(output_path)
     save_json(rows, output_path.with_suffix(".json"))
     return output_path, rows
@@ -932,25 +969,6 @@ def write_detector_keypoint_bev_video(
     return output_path, rows
 
 
-def _detections_to_supervision(result: Any) -> Any:
-    import supervision as sv
-
-    detections = sv.Detections.from_ultralytics(result)
-    names = _result_names(result)
-    if len(detections) == 0:
-        detections.data["class_name"] = np.asarray([], dtype=str)
-        return detections
-    class_ids = (
-        detections.class_id
-        if detections.class_id is not None
-        else np.zeros(len(detections), dtype=int)
-    )
-    class_names = np.asarray([names.get(int(class_id), str(class_id)) for class_id in class_ids])
-    detections.data["class_name"] = class_names
-    mask = np.isin(class_names, list(PLAYER_CLASS_NAMES))
-    return detections[mask]
-
-
 def write_bytetrack_bev_video(
     *,
     video_path: str | Path,
@@ -1041,10 +1059,15 @@ def write_bytetrack_bev_video(
             )
             for i in range(len(tracked))
         ]
-        frame_vis = rgb_from_ultralytics_plot(det_result)
+        frame_vis = _annotate_detection_scene(
+            frame_rgb,
+            tracked,
+            labels=_labels_from_supervision_detections(tracked),
+            trace=True,
+        )
         frame_vis = _draw_keypoints_overlay(frame_vis, keypoints)
         if feet:
-            frame_vis = draw_points(frame_vis, feet, labels=labels, color=(40, 120, 255), radius=6)
+            frame_vis = draw_points(frame_vis, feet, labels=labels, color=(255, 255, 255), radius=5)
 
         for tid, point in zip(tracker_ids, bev_points):
             paths.setdefault(int(tid), []).append((float(point[0]), float(point[1])))
@@ -1070,6 +1093,8 @@ def write_bytetrack_bev_video(
         local_frame_index += 1
     cap.release()
     writer.release()
+    if local_frame_index == 0:
+        raise RuntimeError(f"BEV 預覽影片沒有寫出任何 frame：{output_path}")
     ensure_notebook_playable_mp4(output_path)
     save_json(records, output_path.with_suffix(".json"))
     return output_path, records

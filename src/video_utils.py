@@ -188,7 +188,16 @@ def ensure_notebook_playable_mp4(
         str(output_path),
     ]
     print("$", " ".join(cmd))
-    subprocess.run(cmd, check=True)
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as exc:
+        stderr = (exc.stderr or "").strip()
+        stdout = (exc.stdout or "").strip()
+        details = stderr or stdout or f"ffmpeg exit code={exc.returncode}"
+        raise RuntimeError(
+            "無法把 OpenCV 輸出的影片轉成 notebook 可預覽的 MP4。"
+            f" source={video_path} output={output_path} details={details}"
+        ) from exc
 
     if overwrite:
         output_path.replace(video_path)
@@ -250,7 +259,7 @@ def open_mp4_video_writer(
     *,
     fps: float,
     frame_size: tuple[int, int],
-    preferred_codecs: tuple[str, ...] = ("avc1", "mp4v"),
+    preferred_codecs: tuple[str, ...] = ("mp4v", "avc1"),
 ) -> tuple[cv2.VideoWriter, str]:
     output_path = Path(output_path)
     for codec in preferred_codecs:
@@ -342,5 +351,5 @@ def pick_first_converted_video(course_root: str | Path) -> Path:
     if videos:
         return videos[0]
     raise FileNotFoundError(
-        "找不到 converted 影片。請先在 Day 4-01 上傳影片並完成轉檔。"
+        "找不到 converted 影片。請先在 Day 4-02 上傳影片並完成轉檔。"
     )

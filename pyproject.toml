@@ -3,6 +3,7 @@ name = "basketball-hackathon-course"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "dotenv>=0.9.9",
     "matplotlib>=3.10.9",
     "mediapipe>=0.10.35",
     "numpy>=2.4.6",
@@ -13,9 +14,28 @@ dependencies = [
     "requests>=2.34.2",
     "roboflow>=0.1.1",
     "supervision>=0.28.0",
+    "torch>=2.7.0",
+    "torchaudio>=2.7.0",
+    "torchvision>=0.22.0",
     "tqdm>=4.68.2",
     "ultralytics>=8.4.63",
 ]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchvision = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+torchaudio = [
+    { index = "pytorch-cu128", marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
 
 [dependency-groups]
 dev = [

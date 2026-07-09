@@ -1,11 +1,23 @@
+# Virtual environment
 .venv/
+
 .ruff_cache/
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
+.DS_Store
+Thumbs.db
 
+# Ignore all files in the results directory except for .gitkeep
 assets/results/*
 !assets/results/.gitkeep
 
-.DS_Store
-Thumbs.db
+
+# Ignore all files in the datasets directory except for .gitkeep
+.roboflow_cache
+!assets/datasets/**/.gitkeep
+assets/datasets/**
+
+# Ignore downloaded pretrained checkpoints, but keep the folder structure
+assets/models/pretrained/*
+!assets/models/pretrained/.gitkeep
