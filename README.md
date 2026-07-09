@@ -83,14 +83,15 @@ course/
 
 ## 球追蹤模型建議
 
-Day 4-03 的 `track_orange_ball` 是顏色式基準方法，僅用於建立球中心點、速度與出手 frame 的資料格式。在正式專案中，建議使用 Ultralytics YOLO 類型的 object detector 偵測籃球，類別至少包含 `ball`；若任務包含進球判斷，可加入 `ball-in-basket`、rim 或 backboard。
+Day 4-04 的 `track_orange_ball` 是顏色式基準方法，僅用於建立球中心點、速度與出手 frame 的資料格式。在正式專案中，建議使用 Ultralytics YOLO 類型的 object detector 偵測籃球，類別至少包含 `ball`；若任務包含進球判斷，可加入 `ball-in-basket`、rim 或 backboard。
 
 ### Roboflow Dataset 自動下載
 
 Detection 與 court keypoint 訓練 notebook 支援學生輸入 Roboflow API key 後，透過 Roboflow 官方 Python SDK 自動下載自己的標註資料：
 
-- `day1/d1_03_bbox_homework_setup.ipynb`、`day2/d2_03_roboflow_bbox_training.ipynb`：下載 `yolov8` detection export，目標位置是 `assets/datasets/roboflow_bbox_yolo/`。
+- `day1/d1_03_bbox_homework.ipynb`：下載 `yolov8` detection export，目標位置是 `assets/datasets/roboflow_bbox_yolo/`。
 - `day1/d1_02_keypoint_annotation_roboflow_lab.ipynb`：下載 `coco` keypoint export，目標位置是 `assets/datasets/roboflow_court_coco/`，再自動轉成 YOLO pose dataset `assets/datasets/roboflow_court_yolo_pose/`。
+- `day4/d4_01_roboflow_ball_detector_training.ipynb`：下載 notebook 內指定的 Roboflow `yolov8` detection export，目標位置是 `assets/datasets/roboflow_ball_yolo/`；學生只需要提供 API key。
 - Notebook 會先檢查資料是否已下載或已轉換；已存在時直接沿用。需要重抓或重轉時，設定 notebook 內的 `FORCE_DOWNLOAD = True` 或 `FORCE_CONVERSION = True`。
 - Colab 若尚未安裝 SDK，重新執行 notebook 開頭的 bootstrap / requirements 安裝 cell 即可安裝 `roboflow`。
 
@@ -121,14 +122,13 @@ Detection 與 court keypoint 訓練 notebook 支援學生輸入 Roboflow API key
 
 1. `day1/d1_01_keypoint_pairing_homography.ipynb`
 2. `day1/d1_02_keypoint_annotation_roboflow_lab.ipynb`
-3. `day1/d1_03_bbox_homework_setup.ipynb`
+3. `day1/d1_03_bbox_homework.ipynb`
 
 ### Day 2：Detection 與 BBOX-to-BEV
 
 1. `day2/d2_01_yolo26_detection.ipynb`
 2. `day2/d2_02_yolo_players_to_bev.ipynb`
-3. `day2/d2_03_roboflow_bbox_training.ipynb`
-4. `day2/d2_04_bbox_to_bev_integration.ipynb`
+3. `day2/d2_03_bbox_to_bev_integration.ipynb`
 
 ### Day 3：ByteTrack 與位置數據化
 
@@ -138,9 +138,10 @@ Detection 與 court keypoint 訓練 notebook 支援學生輸入 Roboflow API key
 
 ### Day 4：近距離投籃影片、人體姿態與球軌跡
 
-1. `day4/d4_01_upload_and_convert_shooting_video.ipynb`
-2. `day4/d4_02_mediapipe_pose_angle_lab.ipynb`
-3. `day4/d4_03_ball_tracking_and_release_point_lab.ipynb`
+1. `day4/d4_01_roboflow_ball_detector_training.ipynb`
+2. `day4/d4_02_trained_ball_detector_bytetrack_preview.ipynb`
+3. `day4/d4_03_mediapipe_pose_angle_lab.ipynb`
+4. `day4/d4_04_ball_tracking_and_release_point_lab.ipynb`
 
 ### Day 5：整合、報表與展示
 

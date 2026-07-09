@@ -4,14 +4,13 @@
 
 - `day1/d1_01_keypoint_pairing_homography.ipynb`: BEV keypoint and camera-frame pairing tool; students build at least four correspondences, compute homography, and project a footpoint.
 - `day1/d1_02_keypoint_annotation_roboflow_lab.ipynb`: Roboflow COCO keypoint export, YOLO pose conversion, optional Ultralytics training, trained court keypoint inference.
-- `day1/d1_03_bbox_homework_setup.ipynb`: BBOX class design, Roboflow YOLO export check, optional Ultralytics detector training, trained detector inference.
+- `day1/d1_03_bbox_homework.ipynb`: BBOX class design, Roboflow YOLO export check, optional Ultralytics detector training, trained detector inference.
 
 ## Day 2 - Detection and BBOX-to-BEV
 
 - `day2/d2_01_yolo26_detection.ipynb`: trained YOLO26 detector inference on reference video.
 - `day2/d2_02_yolo_players_to_bev.ipynb`: trained detector box → bottom-center → project all detected players to BEV in one pass.
-- `day2/d2_03_roboflow_bbox_training.ipynb`: Roboflow YOLO export, optional detector training, trained detector video preview.
-- `day2/d2_04_bbox_to_bev_integration.ipynb`: detector + 即時場地 keypoint + homography integration → BEV video.
+- `day2/d2_03_bbox_to_bev_integration.ipynb`: detector + 即時場地 keypoint + homography integration → BEV video.
 
 ## Day 3 - ByteTrack and Tactical Board
 
@@ -19,11 +18,12 @@
 - `day3/d3_02_yolo_bytetrack_tracking.ipynb`: Ultralytics tracking mode with `bytetrack.yaml`.
 - `day3/d3_03_tracking_to_bev_mini_project.ipynb`: detector + ByteTrack + court keypoint homography → BEV path video.
 
-## Day 4 - Outdoor Shooting Video Analysis
+## Day 4 - Ball Detector, Tracking, Pose, and Integrated Overlay
 
-- `day4/d4_01_upload_and_convert_shooting_video.ipynb`: Buzzheavier or Drive upload; ffmpeg conversion.
-- `day4/d4_02_mediapipe_pose_angle_lab.ipynb`: MediaPipe skeleton / synthetic fallback; elbow, knee, shoulder angles.
-- `day4/d4_03_ball_tracking_and_release_point_lab.ipynb`: orange ball tracking, ball path and release frame proxy.
+- `day4/d4_01_roboflow_ball_detector_training.ipynb`: fixed Roboflow ball dataset download, YOLO26 training, trained ball detector preview.
+- `day4/d4_02_trained_ball_detector_bytetrack_preview.ipynb`: trained ball detector + supervision ByteTrack preview on converted video.
+- `day4/d4_03_mediapipe_pose_angle_lab.ipynb`: MediaPipe skeleton / synthetic fallback; elbow, knee, shoulder angles.
+- `day4/d4_04_ball_tracking_and_release_point_lab.ipynb`: orange ball tracking, ball path and release frame proxy.
 
 ## Day 5 - Final Report and Showcase
 

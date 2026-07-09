@@ -4,15 +4,16 @@
 
 | 路徑 | 格式 | 使用 Notebook |
 | --- | --- | --- |
-| `assets/datasets/roboflow_bbox_yolo/` | YOLO detection export，需包含 `data.yaml`、`train/`、`valid/`、`test/` 或對應的 `images/labels` 結構。 | `day1/d1_03_bbox_homework_setup.ipynb`、`day2/d2_03_roboflow_bbox_training.ipynb` |
+| `assets/datasets/roboflow_bbox_yolo/` | YOLO detection export，需包含 `data.yaml`、`train/`、`valid/`、`test/` 或對應的 `images/labels` 結構。 | `day1/d1_03_bbox_homework.ipynb` |
 | `assets/datasets/roboflow_court_coco/` | Roboflow COCO keypoint export，通常包含 `train/_annotations.coco.json`、`valid/_annotations.coco.json`、`test/_annotations.coco.json`。 | `day1/d1_02_keypoint_annotation_roboflow_lab.ipynb` |
 | `assets/datasets/roboflow_court_yolo_pose/` | 由 COCO keypoint export 轉出的 Ultralytics YOLO pose 格式。 | `day1/d1_02_keypoint_annotation_roboflow_lab.ipynb` |
+| `assets/datasets/roboflow_ball_yolo/` | YOLO detection export，用於 Day 4 的 ball detector 訓練。 | `day4/d4_01_roboflow_ball_detector_training.ipynb` |
 
 大型資料集可只放在本機或 Google Drive，不一定要提交到 Git。
 
 ## Roboflow API 下載
 
-`day1/d1_02_keypoint_annotation_roboflow_lab.ipynb`、`day1/d1_03_bbox_homework_setup.ipynb`、`day2/d2_03_roboflow_bbox_training.ipynb` 都可以改用 Roboflow 官方 Python SDK 下載學生自己的 dataset。
+`day1/d1_02_keypoint_annotation_roboflow_lab.ipynb`、`day1/d1_03_bbox_homework.ipynb` 都可以改用 Roboflow 官方 Python SDK 下載學生自己的 dataset。
 
 在 notebook 內填入：
 
@@ -26,6 +27,7 @@ ROBOFLOW_API_KEY = ""  # 留空會在執行時用 getpass 輸入
 
 - BBOX detection 會下載 `yolov8` export 到 `assets/datasets/roboflow_bbox_yolo/`。
 - Court keypoint 會下載 `coco` export 到 `assets/datasets/roboflow_court_coco/`，再自動轉成 `assets/datasets/roboflow_court_yolo_pose/`。
+- Day 4 ball detector notebook 會下載 notebook 內指定的 Roboflow detection dataset 到 `assets/datasets/roboflow_ball_yolo/`，學生只需要輸入 API key。
 - 如果目標資料夾已經有 `data.yaml` 或 COCO annotations，預設會直接沿用；需要重抓時把 notebook 裡的 `FORCE_DOWNLOAD = True`。
 - 需要重跑 COCO-to-YOLO Pose 轉換時，把 `FORCE_CONVERSION = True`。
 - 若 Colab 還沒安裝 SDK，請重新執行 notebook 前面的 requirements 安裝 cell，或手動執行 `pip install roboflow`。
