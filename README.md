@@ -5,7 +5,8 @@
 課程編排：
 
 - Day 1 - Day 3：影像座標、Homography、Detection、ByteTrack 與 BEV 位置投影。
-- Day 4 - Day 5：近距離投籃影片、人體姿態、球軌跡、分析摘要與成果匯出。
+- Day 4：近距離投籃影片、人體姿態、球軌跡與出手時間觀察。
+- Day 5：以 Proposal 或完成專案 Demo 報告整合所學，說明問題、方法、評估、限制與延伸方向。
 - Notebook 保留主要實作流程；`src/` 放置重複使用的工具函式。
 
 ## 本機環境
@@ -66,7 +67,7 @@ course/
 | --- | --- |
 | `assets/raw/` | 學生自行上傳的原始影片或壓縮檔。 |
 | `assets/raw/reference_videos/` | 課程提供的籃球比賽參考片段，供 Day 1 - Day 3 的 detector、keypoint、tracking 與 BEV 流程使用。 |
-| `assets/converted/` | 經 Notebook 轉檔後的 MP4 影片，供 Day 4、Day 5 分析使用。 |
+| `assets/converted/` | 經 Notebook 轉檔後的 MP4 影片，供 Day 4 分析與 Day 5 自選專案展示使用。 |
 | `assets/datasets/` | 學生或教師從 Roboflow 匯出的 detection / keypoint dataset。 |
 | `assets/models/` | 課程提供的已訓練 YOLO detector 與 court keypoint model。 |
 | `assets/samples/` | 課程內建範例資料；用於沒有模型權重或標註資料時的課堂執行與驗證。 |
@@ -135,6 +136,7 @@ Detection 與 court keypoint 訓練 notebook 支援學生輸入 Roboflow API key
 1. `day3/d3_01_tracking_concept_iou_association.ipynb`
 2. `day3/d3_02_yolo_bytetrack_tracking.ipynb`
 3. `day3/d3_03_tracking_to_bev_mini_project.ipynb`
+4. `day3/d3_04_team_clustering.ipynb`
 
 ### Day 4：近距離投籃影片、人體姿態與球軌跡
 
@@ -143,15 +145,15 @@ Detection 與 court keypoint 訓練 notebook 支援學生輸入 Roboflow API key
 3. `day4/d4_03_mediapipe_pose_angle_lab.ipynb`
 4. `day4/d4_04_ball_tracking_and_release_point_lab.ipynb`
 
-### Day 5：整合、報表與展示
+### Day 5：Project Proposal 或完成專案 Demo
 
-1. `day5/d5_01_shooting_analysis_pipeline_runner.ipynb`
-2. `day5/d5_02_report_visualization_builder.ipynb`
-3. `day5/d5_03_showcase_export.ipynb`
+Day 5 不再新增固定 notebook。學生依 `day5/project_proposal_spec.tex` 準備提案或已完成專案展示；可假設 player tracking、隊伍、背號與 BEV 等先決模組存在，但必須清楚區分已完成、沿用與規劃中的部分。
+
+老師每日前一小時的高層次授課主軸整理於 `daily_lecture_outline.tex`；內容以研究觀念、原理、數學公式與 pseudo code 為主，不含實作 code。
 
 ## 學生影片上傳
 
-Day 4 / Day 5 可以用兩種方式：
+Day 4（以及選擇相關 Day 5 題目的組別）可以用兩種方式：
 
 1. 把影片上傳到 `assets/raw/`
 2. 使用 Buzzheavier 上傳影片後，把下載連結貼到 Notebook

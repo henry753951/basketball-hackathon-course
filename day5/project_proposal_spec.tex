@@ -1,0 +1,183 @@
+% !TeX program = xelatex
+\documentclass[11pt]{article}
+\usepackage[margin=0.85in]{geometry}
+\usepackage{iftex}
+\ifXeTeX\else
+  \PackageError{project-proposal}{This document requires XeLaTeX}{Compile with xelatex.}
+\fi
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setmainfont{TeX Gyre Heros}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{TeX Gyre Cursor}
+\setCJKmainfont{Noto Sans TC}[UprightFont=*,BoldFont=* Bold,AutoFakeSlant=0.15]
+\setCJKsansfont{Noto Sans TC}[UprightFont=*,BoldFont=* Bold,AutoFakeSlant=0.15]
+\setCJKmonofont{Noto Sans TC}[UprightFont=*,BoldFont=* Bold,AutoFakeSlant=0.15]
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{amsmath,amssymb}
+\usepackage[table]{xcolor}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+\usepackage[bookmarks=false,hidelinks]{hyperref}
+
+\definecolor{Main}{HTML}{222222}
+\definecolor{Soft}{HTML}{F4F4F4}
+\definecolor{Rule}{HTML}{666666}
+\definecolor{Accent}{HTML}{DDEBF7}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45\baselineskip}
+\renewcommand{\arraystretch}{1.2}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+\titleformat{\section}{\Large\bfseries\color{Main}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\color{Main}}{}{0pt}{}
+\newcommand{\checkbox}{\(\square\)}
+
+\begin{document}
+
+\begin{center}
+  {\Huge\bfseries Day 5｜籃球視覺分析專題提案與成果展示}\\[5pt]
+  {\Large Project Proposal / Completed Project Demo 規格}\\[8pt]
+  \rule{0.92\textwidth}{0.6pt}
+\end{center}
+
+\begin{tcolorbox}[colback=Soft,colframe=Rule,arc=1mm,boxrule=0.5pt]
+\textbf{Day 5 定位}\quad
+這一天不再新增一套固定 notebook 實作。各組使用前四天工作坊所學，提出一個值得完成的研究／產品提案，或展示已完成的專案。重點不是堆疊最多模型，而是清楚說明「要解決什麼問題、資料如何流動、如何證明結果有效，以及目前限制在哪裡」。
+\end{tcolorbox}
+
+\section{1. 可選交付形式}
+
+每組選擇下列其中一種形式；兩種形式使用同一評分核心。
+
+\subsection{1.1 Project Proposal｜專題提案}
+
+適合尚未完成系統，但已能提出明確問題、技術路線與驗證方法的組別。提案需讓聽眾相信：問題值得做、資料可取得、方法可落地、結果可被客觀評估。
+
+\subsection{1.2 Completed Project Demo｜完成專案展示}
+
+適合已有可操作成果的組別。除了現場展示，仍需說明問題定義、資料、方法、評估與限制；僅播放一段成功影片，不足以證明系統具有一般性。
+
+\section{2. 可假設的先決模組}
+
+提案可假設下列基礎能力已存在，不必在有限時間內全部重做；但簡報必須標示哪些是「已完成」、「沿用現有工具」或「未來工作」。
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item 球員、籃球、籃框與球場 keypoint detection。
+  \item ByteTrack 或其他多目標追蹤，以及逐 frame 的 Track ID。
+  \item Homography 與球員 footpoint 的 BEV 投影。
+  \item Team clustering / team classification（隊伍分群或分類）。
+  \item Jersey number recognition（背號辨識）、OCR 或球員名單對照。
+  \item 人體姿態、關節角度、球軌跡與出手時間估計。
+  \item 人工事件標註、比賽 play-by-play 或其他外部資料來源。
+\end{itemize}
+
+\begin{tcolorbox}[colback=Accent,colframe=Rule,arc=1mm,boxrule=0.45pt]
+\textbf{誠實標示原則}\quad
+可假設模組存在，不代表可以把假設成果當成實驗結果。架構圖應以不同線型或顏色區分「本組實作」、「外部現成模組」與「規劃中模組」。
+\end{tcolorbox}
+
+\section{3. 報告必備內容}
+
+\subsection{3.1 問題與使用情境}
+
+\begin{enumerate}[leftmargin=1.8em,label=\arabic*.,itemsep=3pt]
+  \item 用一句話定義問題：輸入是什麼、希望輸出什麼、結果由誰使用。
+  \item 說明目標使用者，例如教練、球員、分析師、轉播單位或研究者。
+  \item 提出一到三個可回答的研究／產品問題，避免只寫「使用 AI 分析籃球」。
+\end{enumerate}
+
+\subsection{3.2 資料與標註}
+
+說明影片來源、視角、解析度、資料量、授權／隱私，以及需要哪些 ground truth（真值標註）。若資料尚未收集，需提出收集與切分策略，並避免讓同一場比賽片段同時出現在訓練與測試資料。
+
+\subsection{3.3 方法與資料流}
+
+至少一張架構圖，從原始輸入一路畫到最終輸出。每個模組需交代：
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item 接收哪些資料欄位。
+  \item 產生哪些資料欄位。
+  \item 主要假設與最可能的失敗原因。
+  \item 錯誤是否會傳到下一個模組，以及如何檢查。
+\end{itemize}
+
+\subsection{3.4 評估設計}
+
+評估指標必須對應問題。可使用但不限於：
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item Detection：Precision、Recall、mAP、按物件大小分組的錯誤分析。
+  \item Tracking：IDF1、HOTA、ID switches、track coverage。
+  \item Team / jersey：Accuracy、confusion matrix、unknown / reject rate。
+  \item BEV：重投影誤差、球場距離誤差、位置穩定度。
+  \item Pose / event：角度誤差、時間點誤差、事件 Precision / Recall。
+  \item 產品展示：任務完成時間、使用者判讀正確率或具體使用者回饋。
+\end{itemize}
+
+至少展示一個成功案例與一個失敗案例。若是 proposal，請用預期圖表草圖說明未來如何呈現結果。
+
+\subsection{3.5 限制、風險與下一步}
+
+需討論遮擋、視角、光線、球衣相似、球太小、ID switch、資料偏差等限制；涉及真實球員資料時，也要說明隱私、授權及不當推論風險。最後列出可執行的下一步與優先順序。
+
+\section{4. 建議報告節奏}
+
+\begin{tabularx}{\textwidth}{|C{2.0cm}|Y|C{2.2cm}|}\hline
+\rowcolor{Main}\textcolor{white}{\textbf{時間}} & \textcolor{white}{\textbf{內容}} & \textcolor{white}{\textbf{建議頁數}} \\ \hline
+0:00--0:45 & 問題、目標使用者、為什麼值得解決 & 1--2 \\ \hline
+0:45--1:30 & 資料、輸入輸出與先決條件 & 1--2 \\ \hline
+1:30--3:00 & 方法、架構圖與關鍵原理 & 2--3 \\ \hline
+3:00--4:15 & Demo 或預期成果／實驗設計 & 2--3 \\ \hline
+4:15--5:00 & 評估、失敗案例、限制與下一步 & 1--2 \\ \hline
+5:00--7:00 & 問答（由授課團隊依班級人數調整） & --- \\ \hline
+\end{tabularx}
+
+\section{5. 繳交內容}
+
+\begin{itemize}[leftmargin=1.6em,itemsep=4pt]
+  \item \checkbox\ PDF slides，建議 6--10 頁，不含附錄。
+  \item \checkbox\ 一頁摘要：問題、輸入、輸出、方法、評估與限制。
+  \item \checkbox\ 架構圖或資料流程圖，清楚標示模組完成狀態。
+  \item \checkbox\ Proposal：實驗計畫、里程碑與預期結果草圖。
+  \item \checkbox\ Completed demo：程式／notebook、執行說明與代表性輸出。
+  \item \checkbox\ 參考資料與使用的外部模型、資料集、套件來源。
+\end{itemize}
+
+\section{6. 評分規準（100 分）}
+
+\begin{tabularx}{\textwidth}{|Y|C{1.5cm}|Y|}\hline
+\rowcolor{Main}\textcolor{white}{\textbf{面向}} & \textcolor{white}{\textbf{分數}} & \textcolor{white}{\textbf{判準}} \\ \hline
+問題定義與價值 & 15 & 輸入、輸出、使用者與研究問題明確，不只羅列技術名詞。 \\ \hline
+資料與可行性 & 15 & 資料來源、標註、切分、授權與先決假設合理。 \\ \hline
+方法與原理 & 20 & 架構完整，模組關係、關鍵原理與錯誤傳遞說明清楚。 \\ \hline
+評估設計／實驗證據 & 20 & 指標對應問題，包含基準、成功與失敗案例；demo 不只挑最好片段。 \\ \hline
+視覺化與溝通 & 15 & 圖表能回答問題，術語有解釋，非本科聽眾也能跟上。 \\ \hline
+限制、風險與下一步 & 10 & 誠實說明限制，提出具體且有優先順序的改進。 \\ \hline
+問答與團隊協作 & 5 & 回答有證據，分工清楚且時間控制良好。 \\ \hline
+\end{tabularx}
+
+\section{7. 題目方向範例}
+
+以下是方向，不是規定答案：
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item 自動產生球員 BEV 路徑與進攻 spacing 報告。
+  \item 結合 team、jersey number 與 Track ID 的球員身分校正工具。
+  \item 投籃出手點、人體角度與球軌跡的同步分析。
+  \item 偵測防守錯位、掩護或特定戰術事件的研究提案。
+  \item 面向教練的影片檢索介面，例如搜尋某球員的所有出手片段。
+  \item 系統性比較不同 detector / tracker 在遮擋與小物件上的限制。
+\end{itemize}
+
+\vfill
+\begin{center}
+\small\textbf{評量核心：讓聽眾能從問題一路追到證據，而不是只看到一串模型名稱。}
+\end{center}
+
+\end{document}

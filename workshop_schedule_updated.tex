@@ -16,9 +16,9 @@
 \setmainfont{TeX Gyre Heros}
 \setsansfont{TeX Gyre Heros}
 \setmonofont{TeX Gyre Cursor}
-\setCJKmainfont{Noto Sans CJK TC}[UprightFont = *, BoldFont = * Bold, AutoFakeSlant = 0.15]
-\setCJKsansfont{Noto Sans CJK TC}[UprightFont = *, BoldFont = * Bold, AutoFakeSlant = 0.15]
-\setCJKmonofont{Noto Sans CJK TC}[UprightFont = *, BoldFont = * Bold, AutoFakeSlant = 0.15]
+\setCJKmainfont{Noto Sans TC}[UprightFont = *, BoldFont = * Bold, AutoFakeSlant = 0.15]
+\setCJKsansfont{Noto Sans TC}[UprightFont = *, BoldFont = * Bold, AutoFakeSlant = 0.15]
+\setCJKmonofont{Noto Sans TC}[UprightFont = *, BoldFont = * Bold, AutoFakeSlant = 0.15]
 \renewcommand{\CJKfamilydefault}{\CJKsfdefault}
 
 \usepackage{amsmath,amssymb}
@@ -121,9 +121,9 @@
 
 \overviewitem{Day 1}{Colab、影像座標、keypoint 配對、Homography 與 BEV projection。}{固定圖片與 BEV 圖 keypoint 配對、單點投影、Roboflow keypoint 與 bbox 作業準備。}{20 分}
   \overviewitem{Day 2}{Object Detection、Bounding Box、confidence、bottom-center footpoint 與 BBOX-to-BEV。}{先用寫死框體驗，再用 sample / trained YOLO26 detection，最後把多個 player box 投影到 BEV。}{25 分}
-  \overviewitem{Day 3}{多目標追蹤、IoU 關聯、ByteTrack 概念、Track ID 與軌跡。}{將 detection boxes 接到 tracking，產生 ID、路徑，並映射到 2D 戰術板 / BEV 球場圖。}{20 分}
+  \overviewitem{Day 3}{多目標追蹤、IoU 關聯、ByteTrack、Track ID、BEV 軌跡與隊伍分群。}{將 detections 接成 tracks，投影到 BEV，再用球衣 torso crop 與 HSV 色彩特徵分成 Team A / B。}{20 分}
   \overviewitem{Day 4}{近距離投籃視角、室外拍攝、MediaPipe pose、投籃角度與球軌跡。}{上傳或轉檔自己的投籃影片，輸出人體骨架、手肘 / 膝蓋角度與球軌跡觀察。}{15 分}
-  \overviewitem{Day 5}{投籃分析整合、結果圖表、限制討論與成果展示。}{整理 pose angle、ball tracking、release point 觀察，產出個人投籃分析報告與展示檔。}{20 分}
+  \overviewitem{Day 5}{研究問題、系統架構、評估設計、限制與技術溝通。}{各組提出 Project Proposal，或展示已完成的籃球視覺分析專案 Demo。}{20 分}
 
   \noindent
   \begin{minipage}[t]{0.12\textwidth}\textbf{加分}\\[-0.5mm]{\scriptsize +10}\end{minipage}
@@ -154,8 +154,8 @@
 \vspace{3mm}
 \begin{projectfiles}
 \projectfile{day1/d1\_01\_keypoint\_pairing\_homography.ipynb}{使用 BEV / camera keypoint 配對工具建立對應點，計算 Homography，並把指定點投影到 BEV。}
-\projectfile{day1/d1\_03\_keypoint\_annotation\_roboflow\_lab.ipynb}{介紹 keypoint 標註順序、誤差檢查與之後可延伸的 training code。}
-\projectfile{day1/d1\_04\_bbox\_homework\_setup.ipynb}{說明 player、ball、rim、number 等 bbox 類別與 Roboflow Dataset Version 作業。}
+\projectfile{day1/d1\_02\_keypoint\_annotation\_roboflow\_lab.ipynb}{介紹 keypoint 標註順序、資料格式、誤差檢查與可延伸的 fine-tuning 流程。}
+\projectfile{day1/d1\_03\_bbox\_homework.ipynb}{準備 Day 2 使用的 player、ball、rim、number 等 bbox 資料與 Roboflow Dataset Version。}
 \end{projectfiles}
 
 \clearpage
@@ -175,15 +175,14 @@
 \normalsize
 \vspace{3mm}
 \begin{projectfiles}
-\projectfile{day2/d2\_01\_manual\_detection\_box\_to\_bev.ipynb}{先用單一寫死 bbox 了解 bottom-center 與 BEV 投影。}
-\projectfile{day2/d2\_02\_yolo26\_detection\_preview.ipynb}{若有權重就跑 YOLO26 / Ultralytics detection；否則使用 sample detections JSON。}
-\projectfile{day2/d2\_03\_roboflow\_bbox\_training\_preview.ipynb}{保留 Roboflow dataset download 與 training code 骨架，課堂以 preview 為主。}
-\projectfile{day2/d2\_04\_bbox\_to\_bev\_integration.ipynb}{將多個 detection boxes 的 footpoints 投影到 BEV。}
+\projectfile{day2/d2\_01\_yolo26\_detection.ipynb}{承接 Day 1 的資料準備，專注解讀 class、confidence、bbox 與短影片偵測結果。}
+\projectfile{day2/d2\_02\_yolo\_players\_to\_bev.ipynb}{將多個 player boxes 的 bottom-center footpoints 投影到 BEV。}
+\projectfile{day2/d2\_03\_bbox\_to\_bev\_integration.ipynb}{逐 frame 整合 detection、court keypoints、Homography 與 BEV 輸出。}
 \end{projectfiles}
 
 \clearpage
-\section{Day 3｜ByteTrack、多目標追蹤與位置數據化}
-\daybox{完成 Day 1 到 Day 3 的第一個篇章：從影像座標、Homography、Detection 到 Tracking。學生先用 IoU 理解跨 frame box 關聯，再體驗 ByteTrack / 簡化 tracker 的 Track ID，最後把每個 ID 的路徑畫到 BEV 戰術板上。}{IoU 關聯表、Track ID 結果圖、球員路徑資料、BEV 軌跡圖。}
+\section{Day 3｜ByteTrack、多目標追蹤、BEV 路徑與隊伍分群}
+\daybox{完成 Day 1 到 Day 3 的位置資料篇章：從影像座標、Homography、Detection 到 Tracking。學生先用 IoU 理解跨 frame box 關聯，再觀察 ByteTrack 的 Track ID 與軌跡，把每個 ID 投影到 BEV，最後用球衣 torso crop、HSV histogram 與 K-means 分成兩隊。}{IoU heatmap 與關聯線、含軌跡的 Track ID 影片、BEV 路徑資料、Team A / B 分群圖。}
 
 \vspace{1mm}\footnotesize
 \begin{tabularx}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
@@ -192,15 +191,16 @@
 \checkbox & 3.2 & \typebadge{追蹤} & 使用 ByteTrack 概念或簡化 tracker，將多個 frames 的 detections 賦予 Track ID。 & \checks{\item 可輸出含 Track ID 的 frame 圖} & 5 \\ \hline
 \checkbox & 3.3 & \typebadge{軌跡} & 整理每個 Track ID 的 center / footpoint 座標，形成球員路徑資料。 & \checks{\item 可輸出 tracks json 或 dataframe} & 4 \\ \hline
 \checkbox & 3.4 & \typebadge{BEV} & 將 track footpoints 投影到 BEV，畫出每個 ID 的移動路徑。 & \checks{\item 可輸出 BEV 軌跡圖} & 5 \\ \hline
-\checkbox & 3.5 & \typebadge{觀察} & 討論 Track ID 可能交換、消失或錯誤延續的情境。 & \checks{\item 能指出一個 tracking 限制} & 2 \\ \hline
+\checkbox & 3.5 & \typebadge{分群} & 裁切球員上半身，使用 HSV 色彩特徵與 K-means 分成 Team A / B，並討論 Track ID 與真實球員身分的差異。 & \checks{\item 可對照 BBOX、torso crops、2D 特徵圖與隊伍結果；能指出一個分群限制} & 2 \\ \hline
 \rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 3 小計}} & \textbf{20} \\ \hline
 \end{tabularx}
 \normalsize
 \vspace{3mm}
 \begin{projectfiles}
 \projectfile{day3/d3\_01\_tracking\_concept\_iou\_association.ipynb}{用 IoU matrix 了解 detection boxes 如何跨 frame 配對。}
-\projectfile{day3/d3\_02\_bytetrack\_demo\_with\_sample\_boxes.ipynb}{用 sample boxes 體驗 Track ID 與追蹤結果圖。}
+\projectfile{day3/d3\_02\_yolo\_bytetrack\_tracking.ipynb}{使用 YOLO + ByteTrack 觀察 Track ID、短軌跡與 track lifecycle 摘要。}
 \projectfile{day3/d3\_03\_tracking\_to\_bev\_mini\_project.ipynb}{將 Track ID 路徑投影到 BEV，完成前三天整合。}
+\projectfile{day3/d3\_04\_team\_clustering.ipynb}{使用 torso crop、HSV histogram 與兩群 K-means 建立可視化隊伍分群。}
 \end{projectfiles}
 
 \clearpage
@@ -220,32 +220,32 @@
 \normalsize
 \vspace{3mm}
 \begin{projectfiles}
-\projectfile{day4/d4\_01\_upload\_and\_convert\_shooting\_video.ipynb}{整理學生影片上傳與 ffmpeg 統一轉檔流程。}
-\projectfile{day4/d4\_02\_mediapipe\_pose\_angle\_lab.ipynb}{使用 MediaPipe 或合成資料計算投籃姿態角度。}
-\projectfile{day4/d4\_03\_ball\_tracking\_and\_release\_point\_lab.ipynb}{用簡單球追蹤取得 ball path 與 release frame 觀察。}
+\projectfile{day4/d4\_01\_roboflow\_ball\_detector\_training.ipynb}{準備球的 detection dataset，並依需求執行或檢視 ball detector 訓練。}
+\projectfile{day4/d4\_02\_trained\_ball\_detector\_bytetrack\_preview.ipynb}{使用已訓練 ball detector 與 ByteTrack 觀察球軌跡。}
+\projectfile{day4/d4\_03\_mediapipe\_pose\_angle\_lab.ipynb}{使用 MediaPipe 計算投籃姿態角度。}
+\projectfile{day4/d4\_04\_ball\_tracking\_and\_release\_point\_lab.ipynb}{整合球軌跡、人體關節與 release frame 觀察。}
 \end{projectfiles}
 
 \clearpage
-\section{Day 5｜投籃分析整合、報表與成果展示}
-\daybox{讓學生把 Day 4 的影片、pose angles 與 ball tracking 結果整理成一份小型個人投籃分析報告。課程重點不是判斷姿勢好壞，而是讓學生練習如何從影像取得資料、如何視覺化、如何說明限制與下一步改進。}{投籃分析 summary JSON、角度變化圖、球軌跡圖、骨架展示圖、showcase zip 與簡短成果展示。}
+\section{Day 5｜Project Proposal 與完成專案 Demo 報告}
+\daybox{Day 5 不再加入固定的新實作流程。各組使用前四天工作坊所學，提出一個可執行、可評估的籃球視覺分析 Project Proposal，或展示已完成的專案 Demo。報告需從問題、資料、方法一路說到證據、限制與下一步。}{6--10 頁簡報、一頁摘要、系統架構圖、評估設計，以及 Proposal 的里程碑／預期結果或 Completed Demo 的可重現輸出。}
 
 \vspace{1mm}\footnotesize
 \begin{tabularx}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
 \tasktableheader
-\checkbox & 5.1 & \typebadge{整合} & 讀取 Day 4 pose angle 與 ball track 結果，整理分析 summary。 & \checks{\item 可輸出 d5 shooting summary json} & 4 \\ \hline
-\checkbox & 5.2 & \typebadge{圖表} & 產生 elbow / knee / shoulder angle 變化圖。 & \checks{\item 可輸出 pose angle png} & 4 \\ \hline
-\checkbox & 5.3 & \typebadge{球跡} & 整理球軌跡圖，並標註或說明估計出手點。 & \checks{\item 可輸出 ball path png 或說明追蹤失敗原因} & 3 \\ \hline
-\checkbox & 5.4 & \typebadge{報告} & 選擇一張骨架示意圖或投籃關鍵 frame，作為展示圖。 & \checks{\item 可輸出 showcase skeleton 或關鍵 frame 圖} & 3 \\ \hline
-\checkbox & 5.5 & \typebadge{展示} & 匯出 showcase zip，並進行簡短成果展示。 & \checks{\item 展示影片 / 圖片 / 報告完成} & 4 \\ \hline
-\checkbox & 5.6 & \typebadge{反思} & 說明 AI 視覺分析的限制，例如遮擋、光線、視角、球太小、pose keypoint 不穩。 & \checks{\item 能指出至少一個限制與可能改進方向} & 2 \\ \hline
+\checkbox & 5.1 & \typebadge{問題} & 定義目標使用者、輸入、輸出與一到三個可回答的研究／產品問題。 & \checks{\item 問題明確，不只羅列模型名稱} & 4 \\ \hline
+\checkbox & 5.2 & \typebadge{資料} & 說明資料來源、標註、切分、授權與可假設的先決模組。 & \checks{\item 已完成、沿用與規劃中內容有清楚區分} & 3 \\ \hline
+\checkbox & 5.3 & \typebadge{方法} & 以架構圖呈現 video、detections、tracks、team / identity、BEV / pose / events 與最終輸出的資料流。 & \checks{\item 每個模組的輸入、輸出與主要假設可解釋} & 4 \\ \hline
+\checkbox & 5.4 & \typebadge{證據} & Proposal 提出 baseline、metrics 與預期圖表；Completed Demo 提供代表性成功與失敗案例。 & \checks{\item 評估方法能回答原始問題} & 4 \\ \hline
+\checkbox & 5.5 & \typebadge{展示} & 依時限完成 Proposal 或 Demo 報告，使用圖表、影片或 storyboard 支持結論。 & \checks{\item 簡報、摘要與必要附件完成} & 3 \\ \hline
+\checkbox & 5.6 & \typebadge{反思} & 說明限制、風險、錯誤傳遞與有優先順序的下一步。 & \checks{\item 至少提出一項可執行的後續實驗} & 2 \\ \hline
 \rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 5 小計}} & \textbf{20} \\ \hline
 \end{tabularx}
 \normalsize
 \vspace{3mm}
 \begin{projectfiles}
-\projectfile{day5/d5\_01\_shooting\_analysis\_pipeline\_runner.ipynb}{讀取 Day 4 結果並產生投籃分析 summary。}
-\projectfile{day5/d5\_02\_report\_visualization\_builder.ipynb}{整理角度圖、球軌跡圖與骨架展示圖。}
-\projectfile{day5/d5\_03\_showcase\_export.ipynb}{將成果圖與 summary 匯出成展示用 zip。}
+\projectfile{day5/project\_proposal\_spec.tex}{Proposal / Completed Project Demo 的交付格式、報告節奏、評分規準與題目方向。}
+\projectfile{daily\_lecture\_outline.tex}{老師每日前一小時的高層次講義主軸；Day 5 包含研究設計、評估與技術溝通。}
 \end{projectfiles}
 
 \clearpage

@@ -17,6 +17,7 @@
 - `day3/d3_01_tracking_concept_iou_association.ipynb`: IoU matrix from real detector outputs on adjacent frames.
 - `day3/d3_02_yolo_bytetrack_tracking.ipynb`: Ultralytics tracking mode with `bytetrack.yaml`.
 - `day3/d3_03_tracking_to_bev_mini_project.ipynb`: detector + ByteTrack + court keypoint homography → BEV path video.
+- `day3/d3_04_team_clustering.ipynb`: torso crops → HSV histogram features → two-cluster K-means, with box/crop/feature/result visualizations.
 
 ## Day 4 - Ball Detector, Tracking, Pose, and Integrated Overlay
 
@@ -25,8 +26,9 @@
 - `day4/d4_03_mediapipe_pose_angle_lab.ipynb`: MediaPipe skeleton / synthetic fallback; elbow, knee, shoulder angles.
 - `day4/d4_04_ball_tracking_and_release_point_lab.ipynb`: orange ball tracking, ball path and release frame proxy.
 
-## Day 5 - Final Report and Showcase
+## Day 5 - Project Proposal or Completed Demo
 
-- `day5/d5_01_shooting_analysis_pipeline_runner.ipynb`: integrate Day 4 outputs into summary JSON.
-- `day5/d5_02_report_visualization_builder.ipynb`: angle plot, ball path, showcase skeleton.
-- `day5/d5_03_showcase_export.ipynb`: copy deliverables and make `student_showcase.zip`.
+- No fixed implementation notebook is added on Day 5.
+- `day5/project_proposal_spec.tex`: proposal/demo deliverables, presentation flow, evaluation rubric, and topic directions.
+- Students may assume prerequisites such as player tracking, team classification, jersey recognition, and BEV projection, but must distinguish completed, reused, and planned modules.
+- `daily_lecture_outline.tex`: high-level lecture topics for the first hour of every day; theory, mathematics, research concepts, and pseudo code only.
