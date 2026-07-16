@@ -156,6 +156,7 @@ def ensure_notebook_playable_mp4(
     overwrite: bool = True,
     crf: int = 23,
     preset: str = "veryfast",
+    verbose: bool = True,
 ) -> Path:
     """Re-encode a video to a browser-friendly H.264 MP4 for notebook playback."""
     video_path = Path(video_path)
@@ -187,7 +188,8 @@ def ensure_notebook_playable_mp4(
         str(crf),
         str(output_path),
     ]
-    print("$", " ".join(cmd))
+    if verbose:
+        print("$", " ".join(cmd))
     try:
         subprocess.run(cmd, check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as exc:

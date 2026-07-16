@@ -16,8 +16,8 @@
 
 - `day3/d3_01_tracking_concept_iou_association.ipynb`: IoU matrix from real detector outputs on adjacent frames.
 - `day3/d3_02_yolo_bytetrack_tracking.ipynb`: Ultralytics tracking mode with `bytetrack.yaml`.
-- `day3/d3_03_tracking_to_bev_mini_project.ipynb`: detector + ByteTrack + court keypoint homography → BEV path video.
-- `day3/d3_04_team_clustering.ipynb`: torso crops → HSV histogram features → two-cluster K-means, with box/crop/feature/result visualizations.
+- `day3/d3_03_team_clustering.ipynb`: torso crops → HSV histogram features → two-cluster K-means, with box/crop/feature/result visualizations.
+- `day3/d3_04_tracking_to_bev_mini_project.ipynb`: detector + ByteTrack + court keypoint homography → BEV paths, then track-level team clustering with original-frame, feature-space, team-colored BEV visualizations, and a side-by-side team tracking video.
 
 ## Day 4 - Ball Detector, Tracking, Pose, and Integrated Overlay
 

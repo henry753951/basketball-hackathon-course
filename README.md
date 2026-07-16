@@ -135,8 +135,8 @@ Detection 與 court keypoint 訓練 notebook 支援學生輸入 Roboflow API key
 
 1. `day3/d3_01_tracking_concept_iou_association.ipynb`
 2. `day3/d3_02_yolo_bytetrack_tracking.ipynb`
-3. `day3/d3_03_tracking_to_bev_mini_project.ipynb`
-4. `day3/d3_04_team_clustering.ipynb`
+3. `day3/d3_03_team_clustering.ipynb`
+4. `day3/d3_04_tracking_to_bev_mini_project.ipynb`
 
 ### Day 4：近距離投籃影片、人體姿態與球軌跡
 
