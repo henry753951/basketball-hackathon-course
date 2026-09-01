@@ -325,6 +325,32 @@ def bootstrap_course_repo(
     if mount_drive:
         drive_mounted = mount_drive_if_colab()
 
+    # 每日 Notebook 可能在 Drive 掛載前，先把 /content 的 fallback 傳入
+    # preferred。掛載成功後必須改以 Drive 為準，否則學生產出仍會寫進
+    # Colab runtime，重啟後就會消失。
+    if drive_mounted:
+        target_dir = DEFAULT_COURSE_ROOT
+        if (target_dir / "src" / "course_setup.py").exists() and (
+            target_dir / "assets"
+        ).exists():
+            return bootstrap_course_notebook(
+                target_dir,
+                mount_drive=False,
+                install_requirements=install_requirements,
+                show_summary=show_summary,
+            )
+
+        if target_dir.exists():
+            shutil.rmtree(target_dir)
+        target_dir.parent.mkdir(parents=True, exist_ok=True)
+        clone_repo_snapshot(repo_url, branch, target_dir)
+        return bootstrap_course_notebook(
+            target_dir,
+            mount_drive=False,
+            install_requirements=install_requirements,
+            show_summary=show_summary,
+        )
+
     try:
         return bootstrap_course_notebook(
             preferred,
@@ -336,7 +362,7 @@ def bootstrap_course_repo(
         if not running_in_colab():
             raise
 
-    target_dir = default_runtime_course_root(drive_mounted=drive_mounted)
+    target_dir = default_runtime_course_root(drive_mounted=False)
     if target_dir.exists() and not (target_dir / "src" / "course_setup.py").exists():
         shutil.rmtree(target_dir)
     target_dir.parent.mkdir(parents=True, exist_ok=True)

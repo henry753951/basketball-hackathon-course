@@ -887,9 +887,24 @@ import sys
 
 from IPython.display import Markdown, display
 
-COURSE_ROOT_HINT = next(
-    (p for p in [Path.cwd().resolve(), *Path.cwd().resolve().parents] if (p / "src" / "course_setup.py").exists()),
-    Path("/content/basketball_hackathon/course"),
+DRIVE_MOUNTED = False
+if "google.colab" in sys.modules:
+    from google.colab import drive
+
+    try:
+        drive.mount("/content/drive")
+        DRIVE_MOUNTED = True
+    except NotImplementedError:
+        print("目前這個 Colab runtime 不支援 Drive 掛載，改用 /content 本機路徑。")
+
+COURSE_ROOT_HINT = (
+    Path("/content/drive/MyDrive/basketball_hackathon/course")
+    if DRIVE_MOUNTED
+    else next(
+        (p for p in [Path.cwd().resolve(), *Path.cwd().resolve().parents]
+         if (p / "src" / "course_setup.py").exists()),
+        Path("/content/basketball_hackathon/course"),
+    )
 )
 if not (COURSE_ROOT_HINT / "src" / "course_setup.py").exists() and "google.colab" in sys.modules:
     COURSE_ROOT_HINT.parent.mkdir(parents=True, exist_ok=True)
@@ -902,7 +917,7 @@ if str(COURSE_ROOT_HINT) not in sys.path:
 from src.course_setup import bootstrap_course_repo  # noqa: E402
 
 with redirect_stdout(StringIO()):
-    COURSE_ROOT = bootstrap_course_repo(COURSE_ROOT_HINT)
+    COURSE_ROOT = bootstrap_course_repo(COURSE_ROOT_HINT, mount_drive=False)
 display(Markdown(
     f"✅ **課程環境已就緒**  \\n"
     f"專案根目錄：`{COURSE_ROOT}`"
