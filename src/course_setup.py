@@ -21,7 +21,7 @@ DEFAULT_REPO_SYNC_EXCLUDES = (
     "__pycache__",
     ".ipynb_checkpoints",
 )
-DEFAULT_PRESERVE_PATHS = ("assets/results",)
+DEFAULT_PRESERVE_PATHS = ("assets",)
 
 
 def find_course_root(preferred: str | Path | None = None) -> Path:
@@ -164,11 +164,28 @@ def rsync_tree(
     return target_dir
 
 
-def _copy_path(src: Path, dst: Path) -> None:
-    if src.is_dir():
-        shutil.copytree(src, dst, dirs_exist_ok=True)
+def _restore_path_without_overwrite(src: Path, dst: Path) -> None:
+    """回填舊資料，但讓 snapshot 中的同名項目維持新版內容。"""
+    dst_exists = dst.exists() or dst.is_symlink()
+
+    if src.is_dir() and not src.is_symlink():
+        if not dst_exists:
+            shutil.copytree(src, dst, symlinks=True)
+            return
+        if not dst.is_dir() or dst.is_symlink():
+            return
+
+        for item in src.iterdir():
+            _restore_path_without_overwrite(item, dst / item.name)
+        return
+
+    if dst_exists:
+        return
+
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if src.is_symlink():
+        dst.symlink_to(os.readlink(src), target_is_directory=src.is_dir())
     else:
-        dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dst)
 
 
@@ -178,7 +195,7 @@ def replace_tree_from_snapshot(
     *,
     preserve_paths: tuple[str, ...] = DEFAULT_PRESERVE_PATHS,
 ) -> Path:
-    """用指定 snapshot 覆蓋課程資料夾，並回填保留路徑。"""
+    """用指定 snapshot 覆蓋課程資料夾，並回填 snapshot 中不存在的舊資料。"""
     source_dir = Path(source_dir).expanduser().resolve()
     target_dir = Path(target_dir).expanduser().resolve()
     work_parent = target_dir.parent
@@ -208,7 +225,7 @@ def replace_tree_from_snapshot(
             src = preserve_root / rel_path
             if not src.exists():
                 continue
-            _copy_path(src, target_dir / rel_path)
+            _restore_path_without_overwrite(src, target_dir / rel_path)
 
         success = True
         return target_dir
@@ -227,7 +244,7 @@ def refresh_course_checkout(
     *,
     preserve_paths: tuple[str, ...] = DEFAULT_PRESERVE_PATHS,
 ) -> Path:
-    """重新抓最新課程 repo，並保留學生產出資料夾。"""
+    """重新抓最新課程 repo，並保留 snapshot 中不存在的學生資料。"""
     target_dir = Path(target_dir).expanduser().resolve()
     work_parent = target_dir.parent
     sync_root = Path(
