@@ -165,12 +165,13 @@ def rsync_tree(
 
 
 def _restore_path_without_overwrite(src: Path, dst: Path) -> None:
-    """回填舊資料，但讓 snapshot 中的同名項目維持新版內容。"""
+    """移回舊資料，但讓 snapshot 中的同名項目維持新版內容。"""
     dst_exists = dst.exists() or dst.is_symlink()
 
     if src.is_dir() and not src.is_symlink():
         if not dst_exists:
-            shutil.copytree(src, dst, symlinks=True)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.move(os.fspath(src), os.fspath(dst))
             return
         if not dst.is_dir() or dst.is_symlink():
             return
@@ -183,10 +184,9 @@ def _restore_path_without_overwrite(src: Path, dst: Path) -> None:
         return
 
     dst.parent.mkdir(parents=True, exist_ok=True)
-    if src.is_symlink():
-        dst.symlink_to(os.readlink(src), target_is_directory=src.is_dir())
-    else:
-        shutil.copy2(src, dst)
+    # preserved 與 target 位於同一個 Drive；直接移動可保留 .gdoc 等
+    # Google DriveFS 特殊項目，避免重新建立 symlink 時觸發 Errno 95。
+    shutil.move(os.fspath(src), os.fspath(dst))
 
 
 def replace_tree_from_snapshot(
