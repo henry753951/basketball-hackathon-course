@@ -32,6 +32,16 @@ def _row_float(row: pd.Series, key: str) -> float:
     return float(cast(float, row.at[key]))
 
 
+def _row_speed(row: pd.Series) -> float:
+    if "speed" not in row.index:
+        return 0.0
+    value = row.at["speed"]
+    if not isinstance(value, (int, float, np.number)):
+        return 0.0
+    speed = float(value)
+    return speed if math.isfinite(speed) else 0.0
+
+
 def angle_3pt(a, b, c) -> float:
     """Return angle ABC in degrees."""
     a = np.asarray(a, dtype=float)
@@ -468,6 +478,7 @@ def _draw_pose_side_panel(
     *,
     current_row: pd.Series | None,
     trail_joint: str,
+    show_joint_trail: bool = True,
 ) -> np.ndarray:
     panel = np.ones((height, width, 3), dtype=np.uint8) * 255
     panel[:, :] = (250, 248, 243)
@@ -585,7 +596,7 @@ def _draw_pose_side_panel(
             )
         )
 
-    if len(trail_points) >= 2:
+    if show_joint_trail and len(trail_points) >= 2:
         cv2.polylines(
             panel,
             [np.asarray(trail_points, dtype=np.int32).reshape(-1, 1, 2)],
@@ -627,7 +638,7 @@ def render_pose_overlay_video(
     output_path: str | Path,
     *,
     max_frames: int | None = None,
-    trail_joint: str = "wrist",
+    highlight_joint: str = "wrist",
 ) -> Path:
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -646,15 +657,9 @@ def render_pose_overlay_video(
     frame_idx = 0
 
     sv = _maybe_import_supervision()
-    trace_annotator = None
     dot_annotator = None
     label_annotator = None
     if sv is not None:
-        if hasattr(sv, "TraceAnnotator"):
-            try:
-                trace_annotator = sv.TraceAnnotator(thickness=4, trace_length=20)
-            except TypeError:
-                trace_annotator = sv.TraceAnnotator()
         dot_annotator_cls = getattr(sv, "DotAnnotator", None)
         if dot_annotator_cls is not None:
             try:
@@ -683,15 +688,14 @@ def render_pose_overlay_video(
         scene_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         scene_rgb = _draw_pose_history(scene_rgb, history_rows, current_row=current_row)
         if current_row is not None:
-            joint_x = _row_float(current_row, f"{trail_joint}_x")
-            joint_y = _row_float(current_row, f"{trail_joint}_y")
+            joint_x = _row_float(current_row, f"{highlight_joint}_x")
+            joint_y = _row_float(current_row, f"{highlight_joint}_y")
             detections = _trace_detection(joint_x, joint_y, tracker_id=11, box_size=18)
             if detections is not None:
                 scene_rgb = _annotate_supervision(
                     scene_rgb,
                     detections=detections,
-                    labels=[trail_joint],
-                    trace_annotator=trace_annotator,
+                    labels=[highlight_joint],
                     dot_annotator=dot_annotator,
                     label_annotator=label_annotator,
                 )
@@ -702,7 +706,8 @@ def render_pose_overlay_video(
             height,
             history_rows,
             current_row=current_row,
-            trail_joint=trail_joint,
+            trail_joint=highlight_joint,
+            show_joint_trail=False,
         )
         combined_rgb = side_by_side(scene_rgb, side_panel_rgb, max_width=width * 2)
 
@@ -836,7 +841,7 @@ def render_ball_tracking_overlay_video(
             y = _row_float(row, "y")
             detections = _trace_detection(x, y, tracker_id=21, box_size=20)
             if detections is not None:
-                speed = _row_float(row, "speed") if "speed" in row.index and not pd.isna(row["speed"]) else 0.0
+                speed = _row_speed(row)
                 scene_rgb = _annotate_supervision(
                     scene_rgb,
                     detections=detections,
@@ -962,11 +967,7 @@ def render_pose_and_ball_overlay_video(
                 ball_x, ball_y, tracker_id=21, box_size=20
             )
             if ball_detections is not None:
-                speed = (
-                    _row_float(current_ball_row, "speed")
-                    if "speed" in current_ball_row.index and not pd.isna(current_ball_row["speed"])
-                    else 0.0
-                )
+                speed = _row_speed(current_ball_row)
                 scene_rgb = _annotate_supervision(
                     scene_rgb,
                     detections=ball_detections,

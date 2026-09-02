@@ -11,20 +11,33 @@
 
 ## 本機環境
 
-本專案已使用 `uv` 管理 Python 3.12 環境與 notebook 驗證工具。
+本專案使用 `uv` 管理 Python 環境與 notebook 驗證工具；Apple Silicon macOS 已用 PyTorch MPS（Metal GPU）驗證。NVIDIA 機器則會自動使用 CUDA，沒有 GPU 時才退回 CPU。
 
-```powershell
-uv sync
+```bash
+uv sync --dev
 uv run python -m compileall src
 uv run ruff check .
 uv run pyright src
 ```
 
+確認目前 kernel 能看到 Mac GPU：
+
+```bash
+uv run python -c 'import torch; print(torch.__version__); print("MPS:", torch.backends.mps.is_available())'
+```
+
 執行 notebook 驗證時，請使用已同步的 `uv` 環境，避免混用系統 Python：
 
-```powershell
-$env:PYTHONUTF8 = "1"
-uv run jupyter execute <notebook-path> --timeout=180 --kernel_name=python3
+```bash
+PYTHONUTF8=1 uv run jupyter execute <notebook-path> --timeout=180 --kernel_name=python3
+```
+
+Day 4 不需要訓練或 Roboflow API key，直接使用課程提供的：
+
+```text
+assets/models/detectors/ball_rimV8.pt
+assets/models/detectors/shot_detection.pt
+assets/models/pose/yolov8n-pose.pt
 ```
 
 ## Colab 使用流程
@@ -34,8 +47,11 @@ uv run jupyter execute <notebook-path> --timeout=180 --kernel_name=python3
 1. 掛載自己的 Google Drive。
 2. 將整個課程 repo 複製到 `MyDrive/basketball_hackathon/course/`。
 3. 安裝課程需要的 Python 套件。
+4. 驗證 Day 4 的三個模型權重都已同步，並測試 `assets/results/` 可以寫入 Drive。
 
 之後開啟任一課程 Notebook 時，第一個 code cell 會自動掛載 Drive、定位課程資料夾、安裝 `requirements.txt`，並把 repo root 加入 Python import path，讓 Notebook 可以直接引用 `src/` 裡的共用工具。
+
+Day 4 請從 Drive 裡的 `basketball_hackathon/course/day4/` 開啟。第一個 code cell 會再次檢查模型，並把 `RESULTS` 固定指向 `/content/drive/MyDrive/basketball_hackathon/course/assets/results/`；CSV、圖片、JSON 與預覽影片會直接保留在 Google Drive。
 
 ## 結構
 
@@ -82,17 +98,16 @@ course/
 
 完整使用位置請見 `assets/README.md`。
 
-## 球追蹤模型建議
+## Day 4 投籃分析模型
 
-Day 4-04 的 `track_orange_ball` 是顏色式基準方法，僅用於建立球中心點、速度與出手 frame 的資料格式。在正式專案中，建議使用 Ultralytics YOLO 類型的 object detector 偵測籃球，類別至少包含 `ball`；若任務包含進球判斷，可加入 `ball-in-basket`、rim 或 backboard。
+Day 4 直接使用課程提供的 `ball_rimV8.pt`、`shot_detection.pt` 與 `yolov8n-pose.pt`。Day 4-02 以 shot detector 鎖定投籃者並輸出雙側姿態角度；Day 4-03 再從手腕附近建立事件專屬球軌跡，估計 release frame、release 關節角度與 2D 起飛角。課堂會依序檢查單幀球框、人物骨架、事件球軌跡與 release 畫面，再解讀分析數值與限制。
 
 ### Roboflow Dataset 自動下載
 
-Detection 與 court keypoint 訓練 notebook 支援學生輸入 Roboflow API key 後，透過 Roboflow 官方 Python SDK 自動下載自己的標註資料：
+Day 1 的 detection 與 court keypoint notebook 支援學生輸入 Roboflow API key 後，透過 Roboflow 官方 Python SDK 自動下載自己的標註資料：
 
 - `day1/d1_03_bbox_homework.ipynb`：下載 `yolov8` detection export，目標位置是 `assets/datasets/roboflow_bbox_yolo/`。
 - `day1/d1_02_keypoint_annotation_roboflow_lab.ipynb`：下載 `coco` keypoint export，目標位置是 `assets/datasets/roboflow_court_coco/`，再自動轉成 YOLO pose dataset `assets/datasets/roboflow_court_yolo_pose/`。
-- `day4/d4_01_roboflow_ball_detector_training.ipynb`：下載 notebook 內指定的 Roboflow `yolov8` detection export，目標位置是 `assets/datasets/roboflow_ball_yolo/`；學生只需要提供 API key。
 - Notebook 會先檢查資料是否已下載或已轉換；已存在時直接沿用。需要重抓或重轉時，設定 notebook 內的 `FORCE_DOWNLOAD = True` 或 `FORCE_CONVERSION = True`。
 - Colab 若尚未安裝 SDK，重新執行 notebook 開頭的 bootstrap / requirements 安裝 cell 即可安裝 `roboflow`。
 
@@ -115,7 +130,7 @@ Detection 與 court keypoint 訓練 notebook 支援學生輸入 Roboflow API key
 - `boston-celtics-new-york-knicks-game-1-q1-01_54-01_48_mp4-0003.jpg`
 - `boston-celtics-new-york-knicks-game-1-q1-01_54-01_48_mp4-0004.jpg`
 
-偵測結果再交由 ByteTrack 或 BoT-SORT 做跨 frame 關聯；短暫漏偵可用插值補齊。球體尺寸小、移動快且容易遮擋，訓練資料應涵蓋不同拍攝角度、場地光線、球衣顏色與壓縮品質。
+偵測結果再交由 ByteTrack 或 BoT-SORT 做跨 frame 關聯；短暫漏偵可用插值補齊。球體尺寸小、移動快且容易遮擋，因此課堂會先檢查漏偵與軌跡是否合理，不把 confidence 直接當成正確率。
 
 ## 建議上課順序
 
@@ -138,12 +153,11 @@ Detection 與 court keypoint 訓練 notebook 支援學生輸入 Roboflow API key
 3. `day3/d3_03_team_clustering.ipynb`
 4. `day3/d3_04_tracking_to_bev_mini_project.ipynb`
 
-### Day 4：近距離投籃影片、人體姿態與球軌跡
+### Day 4：投籃事件、人體姿態與出手角度
 
-1. `day4/d4_01_roboflow_ball_detector_training.ipynb`
-2. `day4/d4_02_trained_ball_detector_bytetrack_preview.ipynb`
-3. `day4/d4_03_mediapipe_pose_angle_lab.ipynb`
-4. `day4/d4_04_ball_tracking_and_release_point_lab.ipynb`
+1. `day4/d4_01_ball_detector_bytetrack_preview.ipynb`
+2. `day4/d4_02_yolo_pose_and_shot_lab.ipynb`
+3. `day4/d4_03_ball_tracking_and_release_point_lab.ipynb`
 
 ### Day 5：Project Proposal 或完成專案 Demo
 
@@ -153,18 +167,24 @@ Day 5 不再新增固定 notebook。學生依 `day5/project_proposal_spec.tex` �
 
 ## 學生影片上傳
 
-Day 4（以及選擇相關 Day 5 題目的組別）可以用兩種方式：
+Day 4（以及選擇相關 Day 5 題目的組別）請先開啟
+`day4/d4_01_ball_detector_bytetrack_preview.ipynb`。Notebook 會引導你們使用以下任一方式：
 
-1. 把影片上傳到 `assets/raw/`
-2. 使用 Buzzheavier 上傳影片後，把下載連結貼到 Notebook
+1. **Google Drive（推薦）**：在 Drive 內進入
+   `我的雲端硬碟/basketball_hackathon/course/assets/raw/`，把 `.mp4`、`.mov`、`.m4v`
+   或其他常見影片檔拖進去，再在 notebook 的 `VIDEO_FILENAME` 填入檔名。
+2. **直接從 Colab 上傳**：把 notebook 的 `USE_BROWSER_UPLOAD` 改成 `True`，執行該格後
+   從電腦選取影片。檔案會先寫入 Google Drive 的 `assets/raw/`，不是只留在暫存 runtime。
 
-Notebook 會把影片轉成：
+兩種方式都會把影片轉成瀏覽器較容易播放的：
 
 ```text
-assets/converted/video_001.mp4
+assets/converted/student_video.mp4
 ```
 
-後續分析都讀 `assets/converted/*.mp4`。
+如果不指定新影片，notebook 會沿用課程內建的 `assets/converted/video_001.mp4`。Day 4-02
+與 Day 4-03 都會讀取 Day 4-01 顯示的同一個 `using video` 路徑；圖片、CSV、JSON 與
+overlay 影片則寫入 Google Drive 的 `assets/results/`。
 
 ## 路徑提醒
 

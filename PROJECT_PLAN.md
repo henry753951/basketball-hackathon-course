@@ -19,12 +19,11 @@
 - `day3/d3_03_team_clustering.ipynb`: torso crops → HSV histogram features → two-cluster K-means, with box/crop/feature/result visualizations.
 - `day3/d3_04_tracking_to_bev_mini_project.ipynb`: detector + ByteTrack + court keypoint homography → BEV paths, then track-level team clustering with original-frame, feature-space, team-colored BEV visualizations, and a side-by-side team tracking video.
 
-## Day 4 - Ball Detector, Tracking, Pose, and Integrated Overlay
+## Day 4 - Provided Models, Shot Events, Pose, and Release Angles
 
-- `day4/d4_01_roboflow_ball_detector_training.ipynb`: fixed Roboflow ball dataset download, YOLO26 training, trained ball detector preview.
-- `day4/d4_02_trained_ball_detector_bytetrack_preview.ipynb`: trained ball detector + supervision ByteTrack preview on converted video.
-- `day4/d4_03_mediapipe_pose_angle_lab.ipynb`: MediaPipe skeleton / synthetic fallback; elbow, knee, shoulder angles.
-- `day4/d4_04_ball_tracking_and_release_point_lab.ipynb`: orange ball tracking, ball path and release frame proxy.
+- `day4/d4_01_ball_detector_bytetrack_preview.ipynb`: direct inference with the provided ball detector + supervision ByteTrack preview on converted video.
+- `day4/d4_02_yolo_pose_and_shot_lab.ipynb`: provided YOLO pose + shot detector → active shooter, bilateral keypoints, joint angles, and per-frame shot score.
+- `day4/d4_03_ball_tracking_and_release_point_lab.ipynb`: shot candidate segment + shooter wrist + all ball candidates → event-specific ball path, release frame, 2D launch angle, joint angles, and visual QA outputs.
 
 ## Day 5 - Project Proposal or Completed Demo
 

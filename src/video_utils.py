@@ -7,7 +7,7 @@ import subprocess
 import zipfile
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, cast
+from typing import Callable, Mapping, cast
 
 import cv2
 from IPython.display import HTML, display
@@ -41,6 +41,40 @@ def list_videos(folder: str | Path) -> list[Path]:
         paths.extend(folder.glob(f"*{ext}"))
         paths.extend(folder.glob(f"*{ext.upper()}"))
     return sorted(set(paths))
+
+
+def save_uploaded_videos(
+    uploaded_files: Mapping[str, bytes],
+    output_dir: str | Path,
+) -> list[Path]:
+    """Save browser-uploaded video bytes using safe file names.
+
+    Google Colab ``files.upload()`` returns a mapping of file names to bytes.
+    Keeping this write step in one helper makes the notebook workflow explicit and
+    ensures that uploaded files land in the course ``assets/raw`` directory.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    saved_paths: list[Path] = []
+    rejected_names: list[str] = []
+
+    for original_name, content in uploaded_files.items():
+        safe_name = Path(original_name).name
+        if not safe_name or Path(safe_name).suffix.lower() not in VIDEO_EXTS:
+            rejected_names.append(original_name)
+            continue
+        target = output_dir / safe_name
+        target.write_bytes(bytes(content))
+        saved_paths.append(target)
+
+    if rejected_names:
+        allowed = ", ".join(sorted(VIDEO_EXTS))
+        raise ValueError(
+            f"只接受影片檔（{allowed}）；未儲存：{rejected_names}"
+        )
+    if not saved_paths:
+        raise ValueError("沒有收到可用的影片檔。")
+    return saved_paths
 
 
 def download_file(
@@ -353,5 +387,5 @@ def pick_first_converted_video(course_root: str | Path) -> Path:
     if videos:
         return videos[0]
     raise FileNotFoundError(
-        "找不到 converted 影片。請先在 Day 4-02 上傳影片並完成轉檔。"
+        "找不到 converted 影片。請先在 Day 4-01 上傳影片並完成轉檔。"
     )

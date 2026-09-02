@@ -63,10 +63,17 @@ def write_detection_preview_video(
     imgsz: int = 960,
     class_names_override: Sequence[str] | dict[int, str] | None = None,
     keep_class_names: Iterable[str] | None = None,
+    device: str | int | None = None,
 ) -> tuple[Path, list[dict[str, Any]]]:
-    from .yolo_utils import detections_from_result, load_yolo_model, records_to_dicts
+    from .yolo_utils import (
+        detections_from_result,
+        load_yolo_model,
+        preferred_inference_device,
+        records_to_dicts,
+    )
 
     model = load_yolo_model(model_path)
+    inference_device = device if device is not None else preferred_inference_device()
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         raise FileNotFoundError(video_path)
@@ -84,7 +91,13 @@ def write_detection_preview_video(
     frame_bgr = first_frame_bgr
     while frame_index < max_frames:
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-        result = model.predict(frame_rgb, conf=conf, imgsz=imgsz, verbose=False)[0]
+        result = model.predict(
+            frame_bgr,
+            conf=conf,
+            imgsz=imgsz,
+            device=inference_device,
+            verbose=False,
+        )[0]
         detections = detections_from_result(
             result,
             frame_index=frame_index,
@@ -274,12 +287,15 @@ def write_bytetrack_preview_video(
     start_frame: int = 0,
     class_names_override: Sequence[str] | dict[int, str] | None = None,
     keep_class_names: Iterable[str] | None = None,
+    max_detections_per_frame: int | None = None,
     hold_last_ball_frames: int = 3,
+    device: str | int | None = None,
 ) -> tuple[Path, list[dict[str, Any]]]:
-    from .yolo_utils import detections_from_result, load_yolo_model
+    from .yolo_utils import detections_from_result, load_yolo_model, preferred_inference_device
     import supervision as sv
 
     model = load_yolo_model(model_path)
+    inference_device = device if device is not None else preferred_inference_device()
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         raise FileNotFoundError(video_path)
@@ -313,7 +329,13 @@ def write_bytetrack_preview_video(
             continue
 
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-        result = model.predict(frame_rgb, conf=conf, imgsz=imgsz, verbose=False)[0]
+        result = model.predict(
+            frame_bgr,
+            conf=conf,
+            imgsz=imgsz,
+            device=inference_device,
+            verbose=False,
+        )[0]
         detections = detections_from_result(
             result,
             frame_index=source_frame_index,
@@ -322,6 +344,12 @@ def write_bytetrack_preview_video(
         if keep_class_names is not None:
             keep_names = {str(name) for name in keep_class_names}
             detections = [det for det in detections if det.class_name in keep_names]
+        if max_detections_per_frame is not None:
+            detections = sorted(
+                detections,
+                key=lambda det: det.confidence,
+                reverse=True,
+            )[: max(0, int(max_detections_per_frame))]
         sv_detections = _supervision_from_detection_records(detections)
         tracked = tracker.update_with_detections(sv_detections)
         display_detections = tracked

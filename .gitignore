@@ -8,6 +8,11 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+# Local artifact-tool working files; do not commit slide QA helpers or renders
+.tmp/
+~$*.pptx
+*.pptx.inspect.ndjson
+
 # Ignore all files in the results directory except for .gitkeep
 assets/results/*
 !assets/results/.gitkeep

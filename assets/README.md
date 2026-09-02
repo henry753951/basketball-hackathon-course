@@ -22,15 +22,22 @@
 | `sample_court_frame.png` | 球場相機視角範例圖；用於 keypoint 配對、Homography 與 Day 2-02 YOLO player footpoint → BEV 投影。 | `day1/d1_01_keypoint_pairing_homography.ipynb`、`day2/d2_02_yolo_players_to_bev.ipynb` |
 | `sample_bev_court.json` | Reference-style colorful BEV court template；由 `src.geometry_utils.render_bev_court` 產生投影底圖。 | `day1/d1_01_keypoint_pairing_homography.ipynb`、`day1/d1_02_keypoint_annotation_roboflow_lab.ipynb`、`day2/d2_02_yolo_players_to_bev.ipynb`、`day2/d2_04_bbox_to_bev_integration.ipynb`、`day3/d3_03_tracking_to_bev_mini_project.ipynb` |
 
-## 球追蹤模型建議
+## Day 4 投籃分析模型
 
-Day 4-03 的 `track_orange_ball` 是顏色式基準方法，用於說明球中心點、速度與出手 frame 的資料欄位。在正式專案中，建議使用 Ultralytics YOLO 類型的 object detector 偵測籃球，類別至少包含 `ball`；若任務包含進球判斷，可加入 `ball-in-basket`、rim 或 backboard。
+Day 4 直接使用三個課程提供的 Ultralytics 權重，學生不需要自行訓練：
 
-偵測結果再交由 ByteTrack 或 BoT-SORT 做跨 frame 關聯；短暫漏偵可用插值補齊。球體尺寸小、移動快且容易遮擋，因此資料集應涵蓋不同拍攝角度、場地光線、球衣顏色與壓縮品質。
+- `models/detectors/ball_rimV8.pt`：偵測 `ball` 與 `rim`。
+- `models/detectors/shot_detection.pt`：產生逐 frame 的投籃候選分數。
+- `models/pose/yolov8n-pose.pt`：偵測投籃者的人體 keypoints。
+
+Day 4-03 會用 shot detector 鎖定事件區段，從投籃者手腕附近建立該次出手專屬球軌跡，避免場上多顆球時只取最高 confidence 而切錯球。短暫漏偵以軌跡預測或插值補齊；confidence 不是正確率，release frame 與角度仍需用輸出的檢查圖人工確認。
+
+執行 `init_colab.ipynb` 時會逐一檢查以上三個模型檔，並測試 `assets/results/` 是否可寫入。Colab 中的 Day 4 notebook 只接受位於 `/content/drive/MyDrive/basketball_hackathon/course/` 的課程根目錄，確保所有分析結果會保留在 Google Drive，而不是留在重啟後會消失的 `/content/`。
 
 ## 使用規範
 
-- 學生自行拍攝或下載的原始影片放入 `raw/`。
+- 學生自行拍攝或下載的原始影片放入 `raw/`。在 Google Drive 中的完整位置是
+  `我的雲端硬碟/basketball_hackathon/course/assets/raw/`；也可以由 Day 4-01 的瀏覽器上傳格寫入。
 - 課程參考比賽片段放入 `raw/reference_videos/`。
 - Roboflow 匯出的資料集放入 `datasets/` 對應子資料夾。
 - 已訓練模型權重放入 `models/` 對應子資料夾。

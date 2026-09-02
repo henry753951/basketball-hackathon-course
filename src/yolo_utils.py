@@ -4,13 +4,12 @@ import copy
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 import random
 import cv2
 import numpy as np
-import pandas as pd
 
-from .cv_utils import bottom_center, draw_boxes, draw_points, ensure_dir, load_json, save_json
+from .cv_utils import bottom_center, draw_points, ensure_dir, load_json, save_json
 from .geometry_utils import (
     COURT_EDGES,
     COURT_SPECIAL_SEGMENTS,
@@ -124,6 +123,23 @@ PLAYER_CLASS_NAMES = {
 }
 
 
+def preferred_inference_device() -> str:
+    """Select the fastest device supported by the current PyTorch install.
+
+    CUDA is used on NVIDIA machines, MPS on Apple Silicon, and CPU otherwise.
+    Keeping this decision in one place lets the notebooks run unchanged across
+    Colab, Linux, Windows, and macOS.
+    """
+    import torch
+
+    if torch.cuda.is_available():
+        return "cuda:0"
+    mps_backend = getattr(torch.backends, "mps", None)
+    if mps_backend is not None and mps_backend.is_available():
+        return "mps"
+    return "cpu"
+
+
 def display_keypoint_name(label: str) -> str:
     return COURT_KEYPOINT_NAME_BY_LABEL.get(str(label), str(label))
 
@@ -156,35 +172,15 @@ def detector_model_path(course_root: str | Path) -> Path:
 
 def ball_detector_model_path(course_root: str | Path) -> Path:
     return (
-        Path(course_root) / "assets" / "models" / "detectors" / "yolo26n_basketball_ball_best.pt"
+        Path(course_root) / "assets" / "models" / "detectors" / "ball_rimV8.pt"
     )
-
-
-def latest_ball_detector_training_best_path(course_root: str | Path) -> Path:
-    training_root = (
-        Path(course_root)
-        / "assets"
-        / "results"
-        / "training"
-        / "ball_detection"
-    )
-    candidates = sorted(
-        training_root.glob("*/weights/best.pt"),
-        key=lambda path: path.stat().st_mtime,
-        reverse=True,
-    )
-    if not candidates:
-        raise FileNotFoundError(
-            "找不到任何 ball detector 訓練結果。請先完成 Day 4-01 的訓練。"
-        )
-    return candidates[0]
 
 
 def preferred_ball_detector_preview_model_path(course_root: str | Path) -> Path:
     published = ball_detector_model_path(course_root)
-    if published.exists():
-        return published
-    return latest_ball_detector_training_best_path(course_root)
+    if not published.exists():
+        raise FileNotFoundError(f"找不到課程提供的 ball detector 模型：{published}")
+    return published
 
 
 def pretrained_model_dir(course_root: str | Path) -> Path:
@@ -303,7 +299,9 @@ def mp4_fourcc() -> int:
 
 
 def rgb_from_ultralytics_plot(result: Any) -> np.ndarray:
-    return np.asarray(result.plot()).copy()
+    # Ultralytics returns plotted NumPy frames in BGR order, while the rest of
+    # this module keeps display images in RGB order.
+    return cv2.cvtColor(np.asarray(result.plot()), cv2.COLOR_BGR2RGB).copy()
 
 
 def _result_names(result: Any) -> dict[int, str]:
@@ -357,9 +355,18 @@ def run_detector_on_image(
     imgsz: int = 960,
     frame_index: int = 0,
     class_names_override: Sequence[str] | Mapping[int, str] | None = None,
+    device: str | int | None = None,
 ) -> tuple[list[DetectionRecord], Any]:
     model = load_yolo_model(model_path)
-    result = model.predict(image_rgb, conf=conf, imgsz=imgsz, verbose=False)[0]
+    # Ultralytics expects NumPy images in OpenCV's BGR channel order.
+    image_bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
+    result = model.predict(
+        image_bgr,
+        conf=conf,
+        imgsz=imgsz,
+        device=device if device is not None else preferred_inference_device(),
+        verbose=False,
+    )[0]
     return detections_from_result(
         result,
         frame_index=frame_index,
@@ -375,10 +382,18 @@ def _predict_stretched_result(
     *,
     conf: float,
     imgsz: int,
+    device: str | int | None = None,
 ) -> Any:
     frame_height, frame_width = image_rgb.shape[:2]
-    stretched = cv2.resize(image_rgb, (imgsz, imgsz), interpolation=cv2.INTER_LINEAR)
-    result = model.predict(stretched, conf=conf, imgsz=imgsz, verbose=False)[0]
+    stretched_rgb = cv2.resize(image_rgb, (imgsz, imgsz), interpolation=cv2.INTER_LINEAR)
+    stretched_bgr = cv2.cvtColor(stretched_rgb, cv2.COLOR_RGB2BGR)
+    result = model.predict(
+        stretched_bgr,
+        conf=conf,
+        imgsz=imgsz,
+        device=device if device is not None else preferred_inference_device(),
+        verbose=False,
+    )[0]
     return _remap_result_to_frame(
         result,
         prediction_size=(imgsz, imgsz),
@@ -427,9 +442,10 @@ def predict_court_pose_result(
     *,
     conf: float = 0.25,
     imgsz: int = 960,
+    device: str | int | None = None,
 ) -> Any:
     """Run court pose inference with the square-stretch preprocessing used during labeling."""
-    return _predict_stretched_result(model, image_rgb, conf=conf, imgsz=imgsz)
+    return _predict_stretched_result(model, image_rgb, conf=conf, imgsz=imgsz, device=device)
 
 
 def draw_court_keypoint_records(
@@ -634,7 +650,7 @@ def records_to_dicts(
     return [record.__dict__ for record in records]
 
 
-from .yolo_preview_utils import (
+from .yolo_preview_utils import (  # noqa: E402, F401
     _annotate_detection_scene,
     _detections_to_supervision,
     _labels_from_detection_records,
@@ -916,7 +932,7 @@ def write_detector_keypoint_bev_video(
             break
         frame_index = start_frame + local_frame_index
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-        det_result = detector.predict(frame_rgb, conf=detector_conf, imgsz=imgsz, verbose=False)[0]
+        det_result = detector.predict(frame_bgr, conf=detector_conf, imgsz=imgsz, verbose=False)[0]
         detections = detections_from_result(det_result, frame_index=frame_index)
         players = _player_detections(detections)
         key_result = predict_court_pose_result(

@@ -22,6 +22,12 @@ DEFAULT_REPO_SYNC_EXCLUDES = (
     ".ipynb_checkpoints",
 )
 DEFAULT_PRESERVE_PATHS = ("assets",)
+DAY4_MODEL_RELATIVE_PATHS = {
+    "ball_rim": Path("assets/models/detectors/ball_rimV8.pt"),
+    "shot_detection": Path("assets/models/detectors/shot_detection.pt"),
+    "yolo_pose": Path("assets/models/pose/yolov8n-pose.pt"),
+}
+MIN_COURSE_MODEL_BYTES = 1_000_000
 
 
 def find_course_root(preferred: str | Path | None = None) -> Path:
@@ -109,6 +115,63 @@ def print_environment_summary(course_root: str | Path) -> None:
     print("課程根目錄:", course_root)
     print("素材資料夾:", course_root / "assets")
     print("工具模組:", course_root / "src")
+
+
+def _is_path_within(path: Path, parent: Path) -> bool:
+    try:
+        path.relative_to(parent)
+    except ValueError:
+        return False
+    return True
+
+
+def prepare_day4_workspace(
+    course_root: str | Path,
+) -> tuple[dict[str, Path], Path]:
+    """Validate bundled Day 4 models and prepare a persistent results folder."""
+    course_root = Path(course_root).expanduser().resolve()
+    model_paths = {
+        name: course_root / relative_path
+        for name, relative_path in DAY4_MODEL_RELATIVE_PATHS.items()
+    }
+    invalid_models = [
+        path
+        for path in model_paths.values()
+        if not path.is_file() or path.stat().st_size < MIN_COURSE_MODEL_BYTES
+    ]
+    if invalid_models:
+        missing_text = "\n".join(f"- {path}" for path in invalid_models)
+        raise FileNotFoundError(
+            "Day 4 課程模型不存在或檔案不完整：\n"
+            f"{missing_text}\n"
+            "請重新執行 init_colab.ipynb，同步最新課程 assets 後再開啟 Day 4。"
+        )
+
+    if running_in_colab():
+        my_drive_root = Path(DEFAULT_DRIVE_MOUNT_POINT, "MyDrive").resolve()
+        if not _is_path_within(course_root, my_drive_root):
+            raise RuntimeError(
+                "Day 4 的課程根目錄不在 Google Drive。請先執行 init_colab.ipynb，"
+                "並確認 Drive 掛載成功後再執行本 notebook。"
+            )
+
+    results_dir = course_root / "assets" / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    probe_path: Path | None = None
+    try:
+        descriptor, probe_name = tempfile.mkstemp(
+            prefix=".day4-write-check-",
+            dir=results_dir,
+        )
+        os.close(descriptor)
+        probe_path = Path(probe_name)
+    except OSError as exc:
+        raise RuntimeError(f"Day 4 結果資料夾無法寫入：{results_dir}") from exc
+    finally:
+        if probe_path is not None:
+            probe_path.unlink(missing_ok=True)
+
+    return model_paths, results_dir
 
 
 def clone_repo_snapshot(repo_url: str, branch: str, clone_dir: str | Path) -> Path:

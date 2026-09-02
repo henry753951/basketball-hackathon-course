@@ -122,7 +122,7 @@
 \overviewitem{Day 1}{Colab、影像座標、keypoint 配對、Homography 與 BEV projection。}{固定圖片與 BEV 圖 keypoint 配對、單點投影、Roboflow keypoint 與 bbox 作業準備。}{20 分}
   \overviewitem{Day 2}{Object Detection、Bounding Box、confidence、bottom-center footpoint 與 BBOX-to-BEV。}{先用寫死框體驗，再用 sample / trained YOLO26 detection，最後把多個 player box 投影到 BEV。}{25 分}
   \overviewitem{Day 3}{多目標追蹤、IoU 關聯、ByteTrack、Track ID、BEV 軌跡與隊伍分群。}{將 detections 接成 tracks，投影到 BEV，再用球衣 torso crop 與 HSV 色彩特徵分成 Team A / B。}{20 分}
-  \overviewitem{Day 4}{近距離投籃視角、室外拍攝、MediaPipe pose、投籃角度與球軌跡。}{上傳或轉檔自己的投籃影片，輸出人體骨架、手肘 / 膝蓋角度與球軌跡觀察。}{15 分}
+  \overviewitem{Day 4}{近距離投籃視角、課程提供的 shot／pose／ball 模型、投籃事件與出手角度。}{從 Google Drive 或 Colab 上傳自己的投籃影片，直接推論投籃者、人體骨架與球軌跡，再估計 release frame、關節角度與 2D 起飛角。}{15 分}
   \overviewitem{Day 5}{研究問題、系統架構、評估設計、限制與技術溝通。}{各組提出 Project Proposal，或展示已完成的籃球視覺分析專案 Demo。}{20 分}
 
   \noindent
@@ -205,25 +205,24 @@
 
 \clearpage
 \section{Day 4｜近距離投籃影片、人體姿態與球軌跡分析}
-\daybox{課程第二個篇章切換到近距離視角與室外實作。學生用手機拍攝投籃影片，上傳到 assets/raw 或貼上下載連結，由 Notebook 轉檔成 mp4。接著使用 MediaPipe 或合成資料體驗人體骨架偵測，計算手肘、膝蓋、肩膀角度，並用簡單顏色追蹤或 sample video 觀察球的路徑與出手點。}{轉檔後投籃影片、pose angle CSV、骨架示意圖、角度變化圖、球軌跡圖與出手點估計。}
+\daybox{課程第二個篇章切換到近距離投籃視角。學生用手機拍攝投籃影片，放入 Google Drive 的 assets/raw，或從 Day 4-01 的 Colab 上傳格直接選檔，再統一轉成 mp4。接著使用課程提供的 shot detector、YOLO pose 與 ball detector，融合投籃候選分數、手腕位置和球軌跡，估計 release frame、關節角度與 2D 起飛角。}{轉檔後投籃影片、shot event CSV、pose angle CSV、事件球軌跡、角度分析圖、release 檢查圖與 overlay 影片。}
 
 \vspace{1mm}\footnotesize
 \begin{tabularx}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
 \tasktableheader
-\checkbox & 4.1 & \typebadge{上傳} & 將投籃影片上傳到 assets/raw，或貼上 Buzzheavier / 下載連結。 & \checks{\item raw 影片或下載檔案可被 Notebook 找到} & 3 \\ \hline
+\checkbox & 4.1 & \typebadge{上傳} & 將投籃影片放入 Google Drive 的 assets/raw，或在 Day 4-01 設定 USE\_BROWSER\_UPLOAD=True 後直接選檔。 & \checks{\item using video 顯示預期的 converted 影片} & 3 \\ \hline
 \checkbox & 4.2 & \typebadge{轉檔} & 使用 ffmpeg 將影片統一轉成 mp4、30 FPS、最大邊 1280、移除音訊。 & \checks{\item assets/converted 中出現 mp4} & 3 \\ \hline
-\checkbox & 4.3 & \typebadge{Pose} & 使用 MediaPipe 或合成 pose 資料取得肩膀、手肘、手腕、髖、膝、踝位置。 & \checks{\item 可輸出 pose dataframe 或骨架圖} & 3 \\ \hline
-\checkbox & 4.4 & \typebadge{角度} & 計算 elbow angle、knee angle、shoulder angle，觀察投籃動作變化。 & \checks{\item 可輸出角度變化圖} & 3 \\ \hline
-\checkbox & 4.5 & \typebadge{球跡} & 使用簡單顏色追蹤或 sample ball video 取得球軌跡與簡易出手點估計。 & \checks{\item 可輸出球軌跡圖或 release frame} & 3 \\ \hline
+\checkbox & 4.3 & \typebadge{事件} & 使用 shot detector 與 YOLO pose 鎖定投籃者和投籃候選時間區段。 & \checks{\item 可輸出逐 frame shot score 與 pose dataframe} & 3 \\ \hline
+\checkbox & 4.4 & \typebadge{角度} & 計算 elbow、knee、shoulder angle，並在 release frame 讀取投籃側關節角度。 & \checks{\item 可輸出角度變化圖與 release 關節角度} & 3 \\ \hline
+\checkbox & 4.5 & \typebadge{球跡} & 從投籃者手腕附近建立事件專屬球軌跡，估計 release frame 與 2D 起飛角。 & \checks{\item 可輸出事件 CSV、起飛角與人工檢查圖} & 3 \\ \hline
 \rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 4 小計}} & \textbf{15} \\ \hline
 \end{tabularx}
 \normalsize
 \vspace{3mm}
 \begin{projectfiles}
-\projectfile{day4/d4\_01\_roboflow\_ball\_detector\_training.ipynb}{準備球的 detection dataset，並依需求執行或檢視 ball detector 訓練。}
-\projectfile{day4/d4\_02\_trained\_ball\_detector\_bytetrack\_preview.ipynb}{使用已訓練 ball detector 與 ByteTrack 觀察球軌跡。}
-\projectfile{day4/d4\_03\_mediapipe\_pose\_angle\_lab.ipynb}{使用 MediaPipe 計算投籃姿態角度。}
-\projectfile{day4/d4\_04\_ball\_tracking\_and\_release\_point\_lab.ipynb}{整合球軌跡、人體關節與 release frame 觀察。}
+\projectfile{day4/d4\_01\_ball\_detector\_bytetrack\_preview.ipynb}{準備自己的影片，並使用課程提供的 ball detector 與 ByteTrack 檢查球框和 track ID。}
+\projectfile{day4/d4\_02\_yolo\_pose\_and\_shot\_lab.ipynb}{使用 shot detector 與 YOLO pose 取得投籃候選分數和投籃者姿態角度。}
+\projectfile{day4/d4\_03\_ball\_tracking\_and\_release\_point\_lab.ipynb}{融合事件、手腕與球軌跡，輸出 release frame、關節角度、2D 起飛角與視覺檢查。}
 \end{projectfiles}
 
 \clearpage
