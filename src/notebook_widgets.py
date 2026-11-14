@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .localization import localize
+
 import base64
 import json
 from pathlib import Path
@@ -14,6 +16,8 @@ def show_click_tool(
     title: str = "座標點選工具",
 ) -> None:
     """顯示可點選影像座標的 Notebook 互動工具。"""
+    if title == "座標點選工具":
+        title = localize(title, "Coordinate Picker", "座標選択ツール")
     image_path = Path(image_path)
     b64 = base64.b64encode(image_path.read_bytes()).decode("utf-8")
     canvas_id = "canvas_" + image_path.stem.replace("-", "_")
@@ -23,13 +27,13 @@ def show_click_tool(
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
       <h3 style="margin-bottom: 8px;">{title}</h3>
       <p style="margin: 0 0 8px 0;">
-        點選影像中的參考點；下方會即時列出原始影像座標。
+        {localize('點選影像中的參考點；下方會即時列出原始影像座標。', 'Click reference points in the image. Their original-image coordinates appear below.', '画像の基準点をクリックすると、元画像の座標を下に表示します。')}
       </p>
       <canvas id="{canvas_id}" style="border:1px solid #999; max-width:100%;"></canvas>
-      <p style="margin: 8px 0 4px 0;">已記錄座標：</p>
+      <p style="margin: 8px 0 4px 0;">{localize('已記錄座標：', 'Recorded coordinates:', '記録した座標：')}</p>
       <textarea id="{output_id}" rows="5" style="width:100%; font-family:monospace;"></textarea>
       <br />
-      <button onclick="window.clear_{canvas_id}()" style="margin-top: 8px;">清除座標</button>
+      <button onclick="window.clear_{canvas_id}()" style="margin-top: 8px;">{localize('清除座標', 'Clear coordinates', '座標を消去')}</button>
     </div>
     <script>
     (function() {{
@@ -119,7 +123,7 @@ def show_court_keypoint_pair_tool(
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
       <h3 style="margin: 0 0 8px 0;">{title}</h3>
       <p style="margin: 0 0 10px 0;">
-        先在上方 BEV 選擇一個 keypoint，再在下方相機畫面點選對應位置。至少建立四組 pair 後即可估計 Homography。
+        {localize('先在上方 BEV 選擇一個 keypoint，再在下方相機畫面點選對應位置。至少建立四組 pair 後即可估計 Homography。', 'Select a BEV keypoint above, then its corresponding location in the camera image below. Create at least four pairs to estimate homography.', '上の BEV でキーポイントを選び、下のカメラ画像で対応する位置をクリックします。少なくとも 4 組の対応点を作ります。')}
       </p>
       <div id="{status_id}" style="margin: 0 0 8px 0; font-weight: 600;"></div>
       <canvas id="{bev_canvas_id}" style="border:1px solid #999; max-width:100%; display:block; margin-bottom:12px;"></canvas>
@@ -127,7 +131,7 @@ def show_court_keypoint_pair_tool(
       <p style="margin: 8px 0 4px 0;">pairs JSON：</p>
       <textarea id="{output_id}" rows="10" style="width:100%; font-family:monospace;"></textarea>
       <br />
-      <button onclick="window.clear_{base_id}()" style="margin-top: 8px;">清除 pairs</button>
+      <button onclick="window.clear_{base_id}()" style="margin-top: 8px;">{localize('清除 pairs', 'Clear pairs', '対応点を消去')}</button>
     </div>
     <script>
     (function() {{
@@ -216,8 +220,8 @@ def show_court_keypoint_pair_tool(
           bev_points: pairs.map(pair => pair.bev_xy)
         }};
         output.value = JSON.stringify(data, null, 2);
-        const pending = selected ? `selected: ${{selected.name}}` : "select a BEV keypoint";
-        status.textContent = `${{pairs.length}} pair(s). ${{pending}}`;
+        const pending = selected ? `{localize("selected", "selected", "選択中")}: ${{selected.name}}` : {json.dumps(localize("select a BEV keypoint", "select a BEV keypoint", "BEV のキーポイントを選んでください"))};
+        status.textContent = `${{pairs.length}} {localize("pair(s).", "pair(s).", "組の対応点。")} ${{pending}}`;
       }}
 
       function redraw() {{
@@ -248,7 +252,7 @@ def show_court_keypoint_pair_tool(
 
       camCanvas.addEventListener("click", function(event) {{
         if (!selected) {{
-          status.textContent = "select a BEV keypoint first";
+          status.textContent = {json.dumps(localize("select a BEV keypoint first", "select a BEV keypoint first", "先に BEV のキーポイントを選んでください"))};
           return;
         }}
         const cameraPoint = eventToImage(camCanvas, camImg, event);
@@ -293,6 +297,8 @@ def show_bbox_to_bev_tool(
     title: str = "BBOX-to-BEV 互動工具",
 ) -> None:
     """顯示可調整 bbox 並即時投影 bottom-center footpoint 的 Notebook 工具。"""
+    if title == "BBOX-to-BEV 互動工具":
+        title = localize(title, "Interactive BBOX-to-BEV Tool", "BBOX から BEV への投影ツール")
     image_path = Path(image_path)
     b64 = base64.b64encode(image_path.read_bytes()).decode("utf-8")
     base_id = image_path.stem.replace("-", "_")
@@ -455,7 +461,7 @@ def show_homography_projection_tool(
     <div style="font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
       <h3 style="margin: 0 0 8px 0;">{title}</h3>
       <p style="margin: 0 0 10px 0;">
-        點選左側相機畫面任一位置；工具會立即用目前的 Homography 矩陣投影到右側 BEV。
+        {localize('點選左側相機畫面任一位置；工具會立即用目前的 Homography 矩陣投影到右側 BEV。', 'Click the camera image on the left to project a point onto the BEV on the right using the current homography.', '左のカメラ画像をクリックすると、現在のホモグラフィで右の BEV に投影します。')}
       </p>
       <div id="{status_id}" style="margin: 0 0 8px 0; font-weight: 600;"></div>
       <div style="display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:16px; align-items:start;">
@@ -465,7 +471,7 @@ def show_homography_projection_tool(
       <p style="margin: 8px 0 4px 0;">projection JSON：</p>
       <textarea id="{output_id}" rows="10" style="width:100%; font-family:monospace;"></textarea>
       <br />
-      <button onclick="window.clear_{base_id}()" style="margin-top: 8px;">清除點位</button>
+      <button onclick="window.clear_{base_id}()" style="margin-top: 8px;">{localize('清除點位', 'Clear points', '点を消去')}</button>
     </div>
     <script>
     (function() {{
@@ -537,7 +543,7 @@ def show_homography_projection_tool(
           camera_points: clicks.map(item => item.camera_xy),
           bev_points: clicks.map(item => item.bev_xy)
         }}, null, 2);
-        status.textContent = `${{clicks.length}} projected point(s)` + (clicks.length > 0 ? "" : ". click the camera image");
+        status.textContent = `${{clicks.length}} {localize("projected point(s)", "projected point(s)", "個の投影点")}` + (clicks.length > 0 ? "" : {json.dumps(localize(". click the camera image", ". click the camera image", "。カメラ画像をクリックしてください"))});
       }}
 
       function setupCanvas(canvas, img) {{

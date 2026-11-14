@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .localization import localize
+
 import math
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -238,7 +240,7 @@ def extract_yolo_shot_pose_sequence(
 
     cap.release()
     if not rows:
-        raise RuntimeError("YOLO pose model 沒有偵測到可用的人體姿態。")
+        raise RuntimeError(localize("YOLO pose model 沒有偵測到可用的人體姿態。", "The YOLO pose model found no usable human poses.", "YOLO pose モデルで利用可能な人体姿勢を検出できませんでした。"))
     return pd.DataFrame(rows)
 
 
@@ -485,7 +487,7 @@ def render_shot_event_check_image(
             tiles.append(scene)
     cap.release()
     if not tiles:
-        raise RuntimeError("沒有可產生投籃事件檢查圖的 frame。")
+        raise RuntimeError(localize("沒有可產生投籃事件檢查圖的 frame。", "No frames are available for shot-event inspection images.", "シュートイベントの確認図を作れるフレームがありません。"))
     rows: list[np.ndarray] = []
     for start in range(0, len(tiles), 3):
         row = tiles[start]

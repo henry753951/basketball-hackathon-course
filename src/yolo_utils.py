@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .localization import localize
+
 import copy
 import shutil
 from dataclasses import dataclass
@@ -179,7 +181,7 @@ def ball_detector_model_path(course_root: str | Path) -> Path:
 def preferred_ball_detector_preview_model_path(course_root: str | Path) -> Path:
     published = ball_detector_model_path(course_root)
     if not published.exists():
-        raise FileNotFoundError(f"找不到課程提供的 ball detector 模型：{published}")
+        raise FileNotFoundError(localize(f"找不到課程提供的 ball detector 模型：{published}", f"Course ball-detector model not found: {published}", f"教材のボール検出モデルがありません：{published}"))
     return published
 
 
@@ -259,7 +261,7 @@ def first_reference_video(course_root: str | Path) -> Path:
     videos = reference_videos(course_root)
     if not videos:
         raise FileNotFoundError(
-            "找不到參考影片。請確認 assets/raw/reference_videos/ 內至少有一支 mp4。"
+            localize("找不到參考影片。請確認 assets/raw/reference_videos/ 內至少有一支 mp4。", "No reference video found. Place at least one mp4 in assets/raw/reference_videos/.", "参照動画がありません。assets/raw/reference_videos/ に mp4 を 1 本以上配置してください。")
         )
     return videos[0]
 
@@ -268,7 +270,7 @@ def random_reference_video(course_root: str | Path) -> Path:
     videos = reference_videos(course_root)
     if not videos:
         raise FileNotFoundError(
-            "找不到參考影片。請確認 assets/raw/reference_videos/ 內至少有一支 mp4。"
+            localize("找不到參考影片。請確認 assets/raw/reference_videos/ 內至少有一支 mp4。", "No reference video found. Place at least one mp4 in assets/raw/reference_videos/.", "参照動画がありません。assets/raw/reference_videos/ に mp4 を 1 本以上配置してください。")
         )
     return random.choice(videos)
 
@@ -290,7 +292,7 @@ def read_video_frame(video_path: str | Path, frame_index: int = 0) -> np.ndarray
     ok, frame_bgr = cap.read()
     cap.release()
     if not ok:
-        raise RuntimeError(f"無法讀取 frame {frame_index}: {video_path}")
+        raise RuntimeError(localize(f"無法讀取 frame {frame_index}: {video_path}", f"Cannot read frame {frame_index}: {video_path}", f"フレーム {frame_index} を読めません：{video_path}"))
     return cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
 
@@ -885,7 +887,7 @@ def write_court_keypoint_preview_video(
     cap.release()
     writer.release()
     if local_frame_index == 0:
-        raise RuntimeError(f"Keypoint BEV 預覽影片沒有寫出任何 frame：{output_path}")
+        raise RuntimeError(localize(f"Keypoint BEV 預覽影片沒有寫出任何 frame：{output_path}", f"No keypoint/BEV preview frames were written: {output_path}", f"キーポイントと BEV の動画にフレームを書き込めませんでした：{output_path}"))
     ensure_notebook_playable_mp4(output_path)
     save_json(rows, output_path.with_suffix(".json"))
     return output_path, rows
@@ -1110,7 +1112,7 @@ def write_bytetrack_bev_video(
     cap.release()
     writer.release()
     if local_frame_index == 0:
-        raise RuntimeError(f"BEV 預覽影片沒有寫出任何 frame：{output_path}")
+        raise RuntimeError(localize(f"BEV 預覽影片沒有寫出任何 frame：{output_path}", f"No BEV preview frames were written: {output_path}", f"BEV の確認動画にフレームを書き込めませんでした：{output_path}"))
     ensure_notebook_playable_mp4(output_path)
     save_json(records, output_path.with_suffix(".json"))
     return output_path, records

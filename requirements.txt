@@ -10,3 +10,4 @@ supervision
 mediapipe
 pyyaml
 roboflow
+lap>=0.5.12

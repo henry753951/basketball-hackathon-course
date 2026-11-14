@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .localization import localize
+
 import base64
 import os
 import shutil
@@ -28,7 +30,7 @@ def find_course_root() -> Path:
         if (c / "src").exists() and (c / "assets").exists():
             return c.resolve()
     raise FileNotFoundError(
-        "找不到 course root。請確認你已經執行 init_colab，或目前工作目錄在 course 裡。"
+        localize("找不到 course root。請確認你已經執行 init_colab，或目前工作目錄在 course 裡。", "Course root not found. Run init_colab first or work inside the course directory.", "教材ルートがありません。先に init_colab を実行するか、教材フォルダ内で実行してください。")
     )
 
 
@@ -70,10 +72,10 @@ def save_uploaded_videos(
     if rejected_names:
         allowed = ", ".join(sorted(VIDEO_EXTS))
         raise ValueError(
-            f"只接受影片檔（{allowed}）；未儲存：{rejected_names}"
+            localize(f"只接受影片檔（{allowed}）；未儲存：{rejected_names}", f"Only video files are accepted ({allowed}); not saved: {rejected_names}", f"動画のみ受け付けます（{allowed}）。保存しなかったファイル：{rejected_names}")
         )
     if not saved_paths:
-        raise ValueError("沒有收到可用的影片檔。")
+        raise ValueError(localize("沒有收到可用的影片檔。", "No usable video file was received.", "利用可能な動画ファイルを受け取れませんでした。"))
     return saved_paths
 
 
@@ -153,7 +155,7 @@ def convert_video_with_opencv(
     ok, first_frame = cap.read()
     if not ok:
         cap.release()
-        raise RuntimeError(f"無法讀取影片內容：{input_path}")
+        raise RuntimeError(localize(f"無法讀取影片內容：{input_path}", f"Cannot read video: {input_path}", f"動画を読めません：{input_path}"))
 
     src_h, src_w = first_frame.shape[:2]
     scale = min(1.0, max_side / max(src_w, src_h))
@@ -231,8 +233,8 @@ def ensure_notebook_playable_mp4(
         stdout = (exc.stdout or "").strip()
         details = stderr or stdout or f"ffmpeg exit code={exc.returncode}"
         raise RuntimeError(
-            "無法把 OpenCV 輸出的影片轉成 notebook 可預覽的 MP4。"
-            f" source={video_path} output={output_path} details={details}"
+            localize("無法把 OpenCV 輸出的影片轉成 notebook 可預覽的 MP4。"
+            f" source={video_path} output={output_path} details={details}", f"Cannot convert the OpenCV output to a notebook-playable MP4. source={video_path} output={output_path} details={details}", f"OpenCV の出力を Notebook で再生できる MP4 に変換できません。source={video_path} output={output_path} details={details}")
         ) from exc
 
     if overwrite:
@@ -264,7 +266,7 @@ def display_video_in_notebook(
     html = f"""
     <video {attr_text} width="{width}" style="max-width:100%; height:auto;">
       <source src="data:{mime_type};base64,{b64}" type="{mime_type}">
-      無法預覽影片，請下載後播放。
+      {localize("無法預覽影片，請下載後播放。", "Video preview unavailable. Download the file to play it.", "動画を表示できません。ダウンロードして再生してください。")}
     </video>
     """
     display(HTML(html))
@@ -304,7 +306,7 @@ def open_mp4_video_writer(
             return writer, codec
         writer.release()
     raise RuntimeError(
-        f"無法建立輸出影片：{output_path}；已嘗試 codecs={preferred_codecs!r}"
+        localize(f"無法建立輸出影片：{output_path}；已嘗試 codecs={preferred_codecs!r}", f"Cannot create output video: {output_path}; attempted codecs={preferred_codecs!r}", f"出力動画を作成できません：{output_path}。試した codecs={preferred_codecs!r}")
     )
 
 
@@ -377,7 +379,7 @@ def extract_frame(video_path: str | Path, frame_index: int = 0):
     ok, frame_bgr = cap.read()
     cap.release()
     if not ok:
-        raise RuntimeError(f"無法讀取 frame {frame_index}: {video_path}")
+        raise RuntimeError(localize(f"無法讀取 frame {frame_index}: {video_path}", f"Cannot read frame {frame_index}: {video_path}", f"フレーム {frame_index} を読めません：{video_path}"))
     return cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
 
 
@@ -387,5 +389,5 @@ def pick_first_converted_video(course_root: str | Path) -> Path:
     if videos:
         return videos[0]
     raise FileNotFoundError(
-        "找不到 converted 影片。請先在 Day 4-01 上傳影片並完成轉檔。"
+        localize("找不到 converted 影片。請先在 Day 4-01 上傳影片並完成轉檔。", "No converted video found. Upload and convert a video in Day 4-01 first.", "変換済み動画がありません。先に Day 4-01 でアップロードと変換を行ってください。")
     )

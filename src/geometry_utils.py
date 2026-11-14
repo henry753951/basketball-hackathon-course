@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .localization import localize
+
 from pathlib import Path
 from typing import Any, Sequence, TypedDict
 
@@ -174,10 +176,10 @@ def compute_homography(
     src = np.asarray(camera_points, dtype=np.float32)
     dst = np.asarray(bev_points, dtype=np.float32)
     if len(src) < 4 or len(dst) < 4:
-        raise ValueError("Homography 至少需要 4 組對應點。")
+        raise ValueError(localize("Homography 至少需要 4 組對應點。", "Homography requires at least 4 point correspondences.", "ホモグラフィには少なくとも 4 組の対応点が必要です。"))
     H, mask = cv2.findHomography(src, dst, method=0)
     if H is None:
-        raise RuntimeError("cv2.findHomography 失敗，請確認點位順序與座標是否正確。")
+        raise RuntimeError(localize("cv2.findHomography 失敗，請確認點位順序與座標是否正確。", "cv2.findHomography failed. Check point order and coordinates.", "cv2.findHomography に失敗しました。点の順序と座標を確認してください。"))
     return H
 
 

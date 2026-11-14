@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .localization import localize
+
 import math
 from pathlib import Path
 from typing import Literal, cast
@@ -233,8 +235,8 @@ def extract_pose_sequence_mediapipe_tasks(
             for msg in landmarker_errors:
                 print("-", msg)
         raise RuntimeError(
-            "MediaPipe Tasks Pose Landmarker 沒有從影片偵測到任何 pose landmarks。"
-            "請確認 side.mp4 為清楚的側拍投籃影片，或調整拍攝角度、距離與光線。"
+            localize("MediaPipe Tasks Pose Landmarker 沒有從影片偵測到任何 pose landmarks。"
+            "請確認 side.mp4 為清楚的側拍投籃影片，或調整拍攝角度、距離與光線。", "MediaPipe Tasks Pose Landmarker found no pose landmarks. Check that side.mp4 is a clear side-view shooting video, or adjust the camera angle, distance and lighting.", "MediaPipe Tasks Pose Landmarker で姿勢点を検出できませんでした。side.mp4 が明瞭な側面のシュート映像か確認し、撮影角度、距離、照明を調整してください。")
         )
     print(f"Pose landmarker delegate: {used_delegate}; stride={stride}")
     return add_pose_angles(pd.DataFrame(rows))
@@ -721,7 +723,7 @@ def render_pose_overlay_video(
         frame_idx += 1
 
     if writer is None:
-        raise RuntimeError(f"無法從影片產生 overlay 預覽：{video_path}")
+        raise RuntimeError(localize(f"無法從影片產生 overlay 預覽：{video_path}", f"Cannot generate overlay video: {video_path}", f"重畳動画を作成できません：{video_path}"))
     writer.release()
     cap.release()
     return ensure_notebook_playable_mp4(output_path, overwrite=True)
@@ -1018,7 +1020,7 @@ def render_pose_and_ball_overlay_video(
         frame_idx += 1
 
     if writer is None:
-        raise RuntimeError(f"無法從影片產生 pose+ball overlay 預覽：{video_path}")
+        raise RuntimeError(localize(f"無法從影片產生 pose+ball overlay 預覽：{video_path}", f"Cannot generate pose/ball overlay video: {video_path}", f"姿勢とボールの重畳動画を作成できません：{video_path}"))
     writer.release()
     cap.release()
     return ensure_notebook_playable_mp4(output_path, overwrite=True)

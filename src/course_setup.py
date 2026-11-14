@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .localization import localize
+
 import os
 import tempfile
 import subprocess
@@ -54,7 +56,7 @@ def find_course_root(preferred: str | Path | None = None) -> Path:
             return candidate
 
     raise FileNotFoundError(
-        "找不到課程根目錄。請先執行 init_colab.ipynb，或確認目前目錄位於課程 repo 內。"
+        localize("找不到課程根目錄。請先執行 init_colab.ipynb，或確認目前目錄位於課程 repo 內。", "Course root not found. Run init_colab first or work inside the course repository.", "教材ルートが見つかりません。先に init_colab を実行するか、教材リポジトリ内で実行してください。")
     )
 
 
@@ -82,7 +84,7 @@ def mount_drive_if_colab(mount_point: str = DEFAULT_DRIVE_MOUNT_POINT) -> bool:
     if not running_in_colab():
         return False
     if not colab_drive_mount_supported():
-        print("目前 Colab runtime 不支援 google.colab.drive.mount，改用本機 /content 路徑。")
+        print(localize("目前 Colab runtime 不支援 google.colab.drive.mount，改用本機 /content 路徑。", "This Colab runtime cannot mount Drive; using local /content storage.", "この Colab ランタイムでは Drive をマウントできないため、ローカルの /content を使います。"))
         return False
 
     from google.colab import drive  # type: ignore[import-not-found]
@@ -90,7 +92,7 @@ def mount_drive_if_colab(mount_point: str = DEFAULT_DRIVE_MOUNT_POINT) -> bool:
     try:
         drive.mount(mount_point, force_remount=True)
     except NotImplementedError:
-        print("目前 Colab runtime 不支援 google.colab.drive.mount，改用本機 /content 路徑。")
+        print(localize("目前 Colab runtime 不支援 google.colab.drive.mount，改用本機 /content 路徑。", "This Colab runtime cannot mount Drive; using local /content storage.", "この Colab ランタイムでは Drive をマウントできないため、ローカルの /content を使います。"))
         return False
     return True
 
@@ -102,19 +104,19 @@ def install_requirements_if_colab(course_root: str | Path) -> None:
 
     requirements = Path(course_root) / "requirements.txt"
     if not requirements.exists():
-        print("找不到 requirements.txt，略過套件安裝。")
+        print(localize("找不到 requirements.txt，略過套件安裝。", "requirements.txt is missing; skipping package installation.", "requirements.txt がないため、パッケージのインストールを省略します。"))
         return
 
     cmd = [sys.executable, "-m", "pip", "install", "-q", "-r", str(requirements)]
-    print("正在確認 Colab 執行環境套件...")
+    print(localize("正在確認 Colab 執行環境套件...", "Checking Colab runtime packages...", "Colab のパッケージを確認しています。"))
     subprocess.run(cmd, check=True)
 
 
 def print_environment_summary(course_root: str | Path) -> None:
     course_root = Path(course_root)
-    print("課程根目錄:", course_root)
-    print("素材資料夾:", course_root / "assets")
-    print("工具模組:", course_root / "src")
+    print(localize("課程根目錄:", "Course root:", "教材ルート："), course_root)
+    print(localize("素材資料夾:", "Assets directory:", "素材フォルダ："), course_root / "assets")
+    print(localize("工具模組:", "Utility modules:", "共通モジュール："), course_root / "src")
 
 
 def _is_path_within(path: Path, parent: Path) -> bool:
@@ -142,17 +144,17 @@ def prepare_day4_workspace(
     if invalid_models:
         missing_text = "\n".join(f"- {path}" for path in invalid_models)
         raise FileNotFoundError(
-            "Day 4 課程模型不存在或檔案不完整：\n"
+            localize("Day 4 課程模型不存在或檔案不完整：\n"
             f"{missing_text}\n"
-            "請重新執行 init_colab.ipynb，同步最新課程 assets 後再開啟 Day 4。"
+            "請重新執行 init_colab.ipynb，同步最新課程 assets 後再開啟 Day 4。", f"Day 4 models are missing or incomplete:\n{missing_text}\nRerun init_colab to synchronize the latest assets before opening Day 4.", f"Day 4 のモデルがないか、不完全です。\n{missing_text}\ninit_colab を再実行し、最新の素材を同期してから Day 4 を開いてください。")
         )
 
     if running_in_colab():
         my_drive_root = Path(DEFAULT_DRIVE_MOUNT_POINT, "MyDrive").resolve()
         if not _is_path_within(course_root, my_drive_root):
             raise RuntimeError(
-                "Day 4 的課程根目錄不在 Google Drive。請先執行 init_colab.ipynb，"
-                "並確認 Drive 掛載成功後再執行本 notebook。"
+                localize("Day 4 的課程根目錄不在 Google Drive。請先執行 init_colab.ipynb，"
+                "並確認 Drive 掛載成功後再執行本 notebook。", "The Day 4 course root is not in Google Drive. Run init_colab and verify the Drive mount before running this notebook.", "Day 4 の教材ルートが Google Drive にありません。init_colab を実行し、Drive のマウントを確認してください。")
             )
 
     results_dir = course_root / "assets" / "results"
@@ -166,7 +168,7 @@ def prepare_day4_workspace(
         os.close(descriptor)
         probe_path = Path(probe_name)
     except OSError as exc:
-        raise RuntimeError(f"Day 4 結果資料夾無法寫入：{results_dir}") from exc
+        raise RuntimeError(localize(f"Day 4 結果資料夾無法寫入：{results_dir}", f"Day 4 results directory is not writable: {results_dir}", f"Day 4 の結果フォルダに書き込めません：{results_dir}")) from exc
     finally:
         if probe_path is not None:
             probe_path.unlink(missing_ok=True)
@@ -293,7 +295,7 @@ def replace_tree_from_snapshot(
         success = True
         return target_dir
     except Exception:
-        print("同步失敗，保留暫存資料夾供檢查:", sync_root)
+        print(localize("同步失敗，保留暫存資料夾供檢查:", "Synchronization failed; temporary directory retained for inspection:", "同期に失敗しました。確認用の一時フォルダを保持します："), sync_root)
         raise
     finally:
         if success:
@@ -323,7 +325,7 @@ def refresh_course_checkout(
             preserve_paths=preserve_paths,
         )
     except Exception:
-        print("repo 更新失敗，保留暫存資料夾供檢查:", sync_root)
+        print(localize("repo 更新失敗，保留暫存資料夾供檢查:", "Repository update failed; temporary directory retained for inspection:", "教材の更新に失敗しました。確認用の一時フォルダを保持します："), sync_root)
         raise
     finally:
         shutil.rmtree(sync_root, ignore_errors=True)
@@ -345,6 +347,10 @@ def bootstrap_course_notebook(
 
     if install_requirements:
         install_requirements_if_colab(course_root)
+
+    from .cv_utils import configure_matplotlib_fonts
+
+    configure_matplotlib_fonts()
     if show_summary:
         print_environment_summary(course_root)
 

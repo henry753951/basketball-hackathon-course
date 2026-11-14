@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .localization import localize
+
 import json
 import os
 import random
@@ -180,7 +182,7 @@ def build_yolo_detection_subset(
 
     data_yaml = source_dir / "data.yaml"
     if not data_yaml.exists():
-        raise FileNotFoundError(f"找不到 YOLO data.yaml：{data_yaml}")
+        raise FileNotFoundError(localize(f"找不到 YOLO data.yaml：{data_yaml}", f"YOLO data.yaml not found: {data_yaml}", f"YOLO の data.yaml がありません：{data_yaml}"))
 
     if output_dir.exists() and overwrite:
         shutil.rmtree(output_dir)
@@ -233,7 +235,7 @@ def build_yolo_detection_subset(
 
     train_src = resolve_split(train_rel)
     if not train_src.exists():
-        raise FileNotFoundError(f"找不到 train images：{train_src}")
+        raise FileNotFoundError(localize(f"找不到 train images：{train_src}", f"Training images not found: {train_src}", f"学習用画像がありません：{train_src}"))
 
     train_out_rel = Path("train") / "images"
     stats = {
@@ -293,7 +295,7 @@ def has_coco_keypoint_dataset(path: str | Path) -> bool:
 def _clean_api_key(api_key: str | None = None) -> str:
     value = (api_key or os.getenv("ROBOFLOW_API_KEY") or "").strip()
     if not value or value == "YOUR_API_KEY":
-        raise ValueError("請填入 Roboflow API key，或設定環境變數 ROBOFLOW_API_KEY。")
+        raise ValueError(localize("請填入 Roboflow API key，或設定環境變數 ROBOFLOW_API_KEY。", "Enter a Roboflow API key or set ROBOFLOW_API_KEY in the environment.", "Roboflow API キーを入力するか、環境変数 ROBOFLOW_API_KEY を設定してください。"))
     return value
 
 
@@ -333,11 +335,11 @@ def _roboflow_download_failure_message(
     download_dir: Path,
 ) -> str:
     return (
-        "無法從 Roboflow 下載資料集。"
+        localize("無法從 Roboflow 下載資料集。"
         f" workspace={workspace!r}, project={project!r}, version={int(version)}, format={export_format!r}。"
         " 請確認 Colab 有外網、API key 正確、且 Roboflow 版本已經 Publish。"
         f" 若不走下載流程，也可以先把已匯出的資料集放到 {output_dir}。"
-        f" SDK 下載目錄預期會建立在 {download_dir}。"
+        f" SDK 下載目錄預期會建立在 {download_dir}。", f"Roboflow dataset download failed. workspace={workspace!r}, project={project!r}, version={int(version)}, format={export_format!r}. Check network access, the API key and whether the version is published. Alternatively, place the exported dataset in {output_dir}. The SDK download directory is expected at {download_dir}.", f"Roboflow の取得に失敗しました。workspace={workspace!r}, project={project!r}, version={int(version)}, format={export_format!r}。ネット接続、API キー、版の公開状態を確認してください。出力済みデータを {output_dir} に配置することもできます。SDK の取得先は {download_dir} の予定です。")
     )
 
 
@@ -346,8 +348,8 @@ def _load_roboflow_sdk() -> type:
         from roboflow import Roboflow
     except ImportError as exc:
         raise ImportError(
-            "目前環境還沒有載入 Roboflow 官方 SDK。"
-            "如果你在 Colab，請重新執行 notebook 最前面的 bootstrap cell。"
+            localize("目前環境還沒有載入 Roboflow 官方 SDK。"
+            "如果你在 Colab，請重新執行 notebook 最前面的 bootstrap cell。", "The Roboflow Python SDK is unavailable. In Colab, rerun the notebook's initial setup cell.", "Roboflow の Python SDK がありません。Colab では冒頭の環境設定セルを再実行してください。")
         ) from exc
     return Roboflow
 

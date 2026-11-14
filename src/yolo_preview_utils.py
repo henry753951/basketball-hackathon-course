@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .localization import localize
+
 from pathlib import Path
 from typing import Any, Iterable, Sequence
 
@@ -81,7 +83,7 @@ def write_detection_preview_video(
     ok, first_frame_bgr = cap.read()
     if not ok:
         cap.release()
-        raise RuntimeError(f"無法從影片讀取第一個 frame：{video_path}")
+        raise RuntimeError(localize(f"無法從影片讀取第一個 frame：{video_path}", f"Cannot read the first frame: {video_path}", f"最初のフレームを読めません：{video_path}"))
     height, width = first_frame_bgr.shape[:2]
     output_path = Path(output_path)
     ensure_dir(output_path.parent)
@@ -116,7 +118,7 @@ def write_detection_preview_video(
     cap.release()
     writer.release()
     if frame_index == 0:
-        raise RuntimeError(f"預覽影片沒有寫出任何 frame：{output_path}")
+        raise RuntimeError(localize(f"預覽影片沒有寫出任何 frame：{output_path}", f"No preview frames were written: {output_path}", f"確認動画にフレームを書き込めませんでした：{output_path}"))
     ensure_notebook_playable_mp4(output_path)
     save_json(all_records, output_path.with_suffix(".json"))
     return output_path, all_records
@@ -438,7 +440,7 @@ def write_bytetrack_preview_video(
     cap.release()
     writer.release()
     if local_frame_index == 0:
-        raise RuntimeError(f"ByteTrack 預覽影片沒有寫出任何 frame：{output_path}")
+        raise RuntimeError(localize(f"ByteTrack 預覽影片沒有寫出任何 frame：{output_path}", f"No ByteTrack preview frames were written: {output_path}", f"ByteTrack の確認動画にフレームを書き込めませんでした：{output_path}"))
     ensure_notebook_playable_mp4(output_path)
     save_json(records, output_path.with_suffix(".json"))
     return output_path, records
