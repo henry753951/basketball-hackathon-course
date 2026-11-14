@@ -1,0 +1,191 @@
+% !TeX program = xelatex
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=0.85in]{geometry}
+\usepackage{iftex}
+\ifXeTeX\else
+  \PackageError{project-proposal}{This document requires XeLaTeX}{Compile with xelatex.}
+\fi
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setmainfont{Helvetica Neue}
+\setsansfont{Helvetica Neue}
+\setmonofont{Menlo}
+\setCJKmainfont{Hiragino Sans W3}[BoldFont=Hiragino Sans W6]
+\setCJKsansfont{Hiragino Sans W3}[BoldFont=Hiragino Sans W6]
+\setCJKmonofont{Hiragino Sans W3}[BoldFont=Hiragino Sans W6]
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{amsmath,amssymb}
+\usepackage[table]{xcolor}
+\usepackage{tabularx,xltabular,needspace}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+\usepackage[bookmarks=false,hidelinks]{hyperref}
+
+\definecolor{Main}{HTML}{222222}
+\definecolor{Soft}{HTML}{F4F4F4}
+\definecolor{Rule}{HTML}{666666}
+\definecolor{Accent}{HTML}{DDEBF7}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45\baselineskip}
+\renewcommand{\arraystretch}{1.2}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+\titleformat{\section}{\Large\bfseries\color{Main}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\color{Main}}{}{0pt}{}
+\newcommand{\checkbox}{\(\square\)}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries Day 5：バスケットボール映像分析\\プロジェクト提案と成果発表}\\[5pt]
+  {\large 提案・完成成果の提出要件}\\[8pt]
+  \rule{0.92\textwidth}{0.6pt}
+\end{center}
+
+\begin{tcolorbox}[colback=Soft,colframe=Rule,arc=1mm,boxrule=0.5pt]
+\textbf{5日目の位置付け}\quad
+新しい定型のNotebook演習は追加しない。最初の4日間に学んだ内容を使い、取り組む価値のある研究・製品開発を提案するか、完成した成果を実演する。解決する課題、データの流れ、結果の検証方法、現在の制約を明確に説明する。モデルの数を増やすことが評価の中心ではない。
+\end{tcolorbox}
+
+\section{1. 選択できる発表形式}
+
+各班は次のいずれかを選ぶ。どちらも同じ基本的な評価基準を用いる。
+
+\subsection{1.1 プロジェクト提案（Project Proposal）}
+
+システムは未完成でも、課題、技術的な方針、検証方法を具体的に示せる班に適した形式である。課題の意義、データの入手可能性、手法の実現性、客観的な評価方法を説明する。
+
+\subsection{1.2 完成成果の実演（Completed Project Demo）}
+
+動作する成果がある班に適した形式である。実演に加え、課題、データ、手法、評価、制約を説明する。成功した映像を1本見せるだけでは、別の状況でも使えることの根拠にはならない。
+
+\section{2. 利用を前提としてよい基礎機能}
+
+提案では、次の基礎機能が利用可能だと仮定してよい。限られた時間で、すべてを作り直す必要はない。ただし、完成済み、既存ツールの利用、今後の実装をスライドで明確に区別する。
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item 選手、ボール、リング、コートのキーポイントの検出。
+  \item ByteTrackなどによる複数物体追跡と、フレームごとのTrack ID。
+  \item ホモグラフィと、選手の足元のBEV投影。
+  \item チームのクラスタリング、または教師ありのチーム分類。
+  \item 背番号の認識、OCR、選手名簿との照合。
+  \item 人体姿勢、関節角度、ボール軌跡、リリース時刻の推定。
+  \item 手作業のイベントラベル、試合のプレー記録、その他の外部データ。
+\end{itemize}
+
+\begin{tcolorbox}[colback=Accent,colframe=Rule,arc=1mm,boxrule=0.45pt]
+\textbf{実装状況を正確に示す}\quad
+機能があると仮定してよいことと、その予想出力を実験結果として示してよいことは異なる。構成図では線や色を使い、本班の実装、外部の既存機能、計画中の機能を区別する。
+\end{tcolorbox}
+
+\section{3. 発表に必要な内容}
+
+\subsection{3.1 課題と利用場面}
+
+\begin{enumerate}[leftmargin=1.8em,label=\arabic*.,itemsep=3pt]
+  \item 入力、目標とする出力、結果の利用者を含め、課題を1文で定義する。
+  \item 指導者、選手、分析担当者、放送関係者、研究者など、想定する利用者を示す。
+  \item 検証可能な研究・製品開発に関する問いを1--3個示す。「AIでバスケットボールを分析する」だけでは広すぎる。
+\end{enumerate}
+
+\subsection{3.2 データとアノテーション}
+
+映像の出所、視点、解像度、データ量、利用許諾、プライバシー、必要な正解ラベルを説明する。未収集の場合は収集・分割の方針を示す。同じ試合の映像が学習とテストの両方に入らないようにする。
+
+\subsection{3.3 手法とデータの流れ}
+
+生の入力から最終出力までを示す構成図を、少なくとも1枚用意する。各処理について次を説明する。
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item 入力として受け取るデータ項目。
+  \item 出力するデータ項目。
+  \item 主な仮定と、想定される失敗の原因。
+  \item 誤りが次の処理へ伝わるかどうかと、その確認方法。
+\end{itemize}
+
+\subsection{3.4 評価計画}
+
+問いに対応する指標を選ぶ。例えば次が使えるが、これらに限定されない。
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item 物体検出：適合率、再現率、mAP、物体の大きさ別の誤りの分析。
+  \item 追跡：IDF1、HOTA、IDの入れ替わり、追跡率。
+  \item チーム・背番号：正解率、混同行列、不明率・判定保留率。
+  \item BEV：再投影誤差、コート上の距離誤差、位置の安定性。
+  \item 姿勢・イベント：角度誤差、時刻誤差、イベントの適合率・再現率。
+  \item 製品としての実演：課題の完了時間、利用者の判読正解率、具体的な意見。
+\end{itemize}
+
+成功例と失敗例を、少なくとも一つずつ示す。提案の場合は、今後の結果の示し方が分かるように、予想する図表の下書きを用意する。
+
+\subsection{3.5 制約、リスク、次の取り組み}
+
+遮蔽、視点、照明、似たユニフォーム、小さなボール、IDの入れ替わり、データの偏りを考察する。実際の選手のデータを使う場合は、プライバシー、利用許諾、不適切な推論のリスクも説明する。最後に、実行可能な次の取り組みを優先順位とともに示す。
+
+\section{4. 発表時間の目安}
+
+\begin{xltabular}{\textwidth}{|C{2.0cm}|Y|C{2.2cm}|}\hline
+\rowcolor{Main}\textcolor{white}{\textbf{経過時間}} & \textcolor{white}{\textbf{内容}} & \textcolor{white}{\textbf{目安の枚数}} \\ \hline
+\endfirsthead
+\hline
+\rowcolor{Main}\textcolor{white}{\textbf{経過時間}} & \textcolor{white}{\textbf{内容}} & \textcolor{white}{\textbf{目安の枚数}} \\ \hline
+\endhead
+0:00--0:45 & 課題、利用者、取り組む意義 & 1--2 \\ \hline
+0:45--1:30 & データ、入出力、前提条件 & 1--2 \\ \hline
+1:30--3:00 & 手法、構成図、重要な原理 & 2--3 \\ \hline
+3:00--4:15 & 実演、または予想結果と実験計画 & 2--3 \\ \hline
+4:15--5:00 & 評価、失敗例、制約、次の取り組み & 1--2 \\ \hline
+5:00--7:00 & 質疑応答。授業担当者が受講人数に応じて調整する & --- \\ \hline
+\end{xltabular}
+
+\section{5. 提出物}
+
+\begin{itemize}[leftmargin=1.6em,itemsep=4pt]
+  \item \checkbox\ PDF形式のスライド。付録を除き、6--10枚を推奨する。
+  \item \checkbox\ 1ページの概要。課題、入出力、手法、評価、制約をまとめる。
+  \item \checkbox\ 各処理の実装状況を明示した構成図、またはデータフロー図。
+  \item \checkbox\ 提案：実験計画、到達目標、予想結果の下書き。
+  \item \checkbox\ 完成成果：コードまたはNotebook、実行手順、代表的な出力。
+  \item \checkbox\ 参考資料と、利用した外部モデル、データセット、パッケージの出所。
+\end{itemize}
+
+\section{6. 評価基準（100点）}
+
+\begin{xltabular}{\textwidth}{|Y|C{1.5cm}|Y|}\hline
+\rowcolor{Main}\textcolor{white}{\textbf{項目}} & \textcolor{white}{\textbf{配点}} & \textcolor{white}{\textbf{評価内容}} \\ \hline
+\endfirsthead
+\hline
+\rowcolor{Main}\textcolor{white}{\textbf{項目}} & \textcolor{white}{\textbf{配点}} & \textcolor{white}{\textbf{評価内容}} \\ \hline
+\endhead
+課題の定義と意義 & 15 & 入出力、利用者、研究上の問いが明確で、技術用語の羅列にとどまらない。 \\ \hline
+データと実現性 & 15 & 出所、ラベル、分割、利用許諾、前提が妥当である。 \\ \hline
+手法と原理 & 20 & 構成が整理され、処理間の関係、原理、誤差の伝播を説明できる。 \\ \hline
+評価計画・実験の根拠 & 20 & 指標が問いに対応し、基準手法、成功例、失敗例を含む。実演で最良の場面だけを選ばない。 \\ \hline
+可視化と説明 & 15 & 図表が問いに答え、用語の説明があり、専門外の聴衆にも理解できる。 \\ \hline
+制約・リスク・次の取り組み & 10 & 制約を率直に示し、具体的な改善案に優先順位を付ける。 \\ \hline
+質疑応答と協働 & 5 & 根拠に基づいて回答し、分担が明確で、時間を適切に管理する。 \\ \hline
+\end{xltabular}
+
+\section{7. テーマの例}
+
+以下はテーマの例であり、取り組みを限定するものではない。
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item 選手のBEV軌跡と、攻撃時のスペーシング報告を自動作成する。
+  \item チーム、背番号、Track IDを統合して選手の識別を修正する。
+  \item リリース点、身体の角度、ボール軌跡を時間同期させて分析する。
+  \item 守備のミスマッチ、スクリーン、特定の戦術イベントを検出する研究を提案する。
+  \item 特定選手の全シュート場面を探せる、指導者向けの映像検索画面を作る。
+  \item 遮蔽や小物体について、検出器・追跡器の制約を体系的に比較する。
+\end{itemize}
+
+\vfill
+\begin{center}
+\small\textbf{評価の基本：聴衆が課題から根拠までたどれるように説明する。モデル名を並べるだけでは十分でない。}
+\end{center}
+
+\end{document}

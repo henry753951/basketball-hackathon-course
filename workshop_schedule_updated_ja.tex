@@ -1,0 +1,288 @@
+% !TeX program = xelatex
+% chktex-file 1
+% chktex-file 44
+% XeLaTeX-only version for Source Han Sans / Noto Sans CJK typography.
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=0.85in]{geometry}
+
+\usepackage{iftex}
+\ifXeTeX
+\else
+\PackageError{main}{This document requires XeLaTeX}{Please compile with xelatex.}
+\fi
+\usepackage{fontspec}
+\usepackage{xeCJK}
+
+\setmainfont{Helvetica Neue}
+\setsansfont{Helvetica Neue}
+\setmonofont{Menlo}
+\setCJKmainfont{Hiragino Sans W3}[BoldFont=Hiragino Sans W6]
+\setCJKsansfont{Hiragino Sans W3}[BoldFont=Hiragino Sans W6]
+\setCJKmonofont{Hiragino Sans W3}[BoldFont=Hiragino Sans W6]
+\renewcommand{\CJKfamilydefault}{\CJKsfdefault}
+
+\usepackage{amsmath,amssymb}
+\usepackage[table]{xcolor}
+\usepackage{tikz-cd}
+\usepackage{multicol}
+\usepackage{tabularx,xltabular,needspace}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\usepackage[bookmarks=false,hidelinks]{hyperref}
+\renewcommand{\familydefault}{\sfdefault}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45\baselineskip}
+\renewcommand{\arraystretch}{1.18}
+\setlength{\tabcolsep}{4.8pt}
+\emergencystretch=2em
+\clubpenalty=10000\widowpenalty=10000
+\sloppy
+
+\definecolor{MainBlue}{HTML}{3A3A3A}
+\definecolor{DeepNavy}{HTML}{111111}
+\definecolor{AccentTeal}{HTML}{555555}
+\definecolor{AccentCoral}{HTML}{333333}
+\definecolor{LightBlue}{HTML}{F5F5F5}
+\definecolor{SoftGray}{HTML}{FAFAFA}
+\definecolor{DarkGray}{HTML}{333333}
+\definecolor{WarnYellow}{HTML}{EDEDED}
+
+\newcommand{\overviewitem}[4]{%
+  \noindent
+  \begin{minipage}[t]{0.12\textwidth}
+    \textbf{#1}\\[-0.5mm]
+    {\scriptsize #4}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.84\textwidth}
+    {\scriptsize\textbf{講義：} #2}\\[-0.2mm]
+    {\scriptsize\textbf{演習：} #3}
+  \end{minipage}
+  \par\vspace{1.2mm}
+  \hrule
+  \vspace{1.2mm}
+}
+
+\tcbuselibrary{breakable}
+\newenvironment{projectfiles}{
+  \vspace{2.5mm}
+  \begin{tcolorbox}[colback=SoftGray,colframe=DarkGray,arc=1.5mm,boxrule=0.45pt,left=2.5mm,right=2.5mm,top=2mm,bottom=1.5mm,breakable]
+    {\normalsize\bfseries 当日の演習ファイル}\\[-0.2mm]
+    \begin{enumerate}[leftmargin=1.7em,itemsep=2pt,topsep=2pt,parsep=0pt]
+      }{
+    \end{enumerate}
+  \end{tcolorbox}
+}
+
+\titleformat{\section}{\Large\bfseries\color{MainBlue}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\color{DarkGray}}{}{0pt}{}
+\renewcommand{\tabularxcolumn}[1]{m{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}m{#1}}
+\newcommand{\checkbox}{\(\square\)}
+\newcommand{\donebox}{\(\blacksquare\)}
+\newcommand{\typebadge}[1]{\colorbox{LightBlue}{\textcolor{MainBlue}{\scriptsize\bfseries\strut\ #1\ }}}
+\newcommand{\checks}[1]{\begin{itemize}[leftmargin=1.45em,itemsep=0pt,topsep=0pt,parsep=0pt,label=\(\square\)]#1\end{itemize}}
+\newcommand{\daybox}[2]{%
+  \begin{tcolorbox}[colback=SoftGray,colframe=DarkGray,arc=1mm,boxrule=0.45pt,left=2.5mm,right=2.5mm,top=2mm,bottom=2mm]
+    \textbf{学習目標：} #1
+
+    \vspace{1mm}
+    \textbf{成果物：} #2
+  \end{tcolorbox}
+}
+\newcommand{\projectfile}[2]{\item {\ttfamily\small #1}\\[-0.3mm]{\footnotesize #2}}
+
+\begin{document}
+\newcommand{\tasktableheader}{%
+  \rowcolor{MainBlue}
+  \textcolor{white}{\textbf{完了}} &
+  \textcolor{white}{\textbf{番号}} &
+  \textcolor{white}{\textbf{区分}} &
+  \textcolor{white}{\textbf{課題内容}} &
+  \textcolor{white}{\textbf{確認事項}} &
+  \textcolor{white}{\textbf{配点}} \\ \hline
+}
+
+\begin{center}
+  {\LARGE\bfseries Pythonで学ぶバスケットボール映像分析}\\[4pt]
+  {\Large 5日間のハッカソン：日程と課題評価表}\\[10pt]
+  \rule{0.9\textwidth}{0.6pt}\\[8pt]
+  {\large \textcolor{DarkGray}{Colab｜Roboflow｜Homography｜Detection｜ByteTrack｜Pose｜Shooting Analysis}}
+\end{center}
+\vspace{2mm}
+
+\begin{tcolorbox}[colback=SoftGray,colframe=DarkGray,arc=1mm,boxrule=0.45pt,left=3mm,right=3mm,top=2mm,bottom=2mm]
+  {\large\bfseries コース概要}
+  \vspace{2mm}\hrule\vspace{1.5mm}
+
+\overviewitem{Day 1}{Colab、画像座標、キーポイントの対応付け、ホモグラフィ、BEV投影。}{静止画像とBEV図の点を対応付け、1点を投影する。Roboflowでキーポイントと矩形のアノテーションを準備する。}{20点}
+  \overviewitem{Day 2}{物体検出、バウンディングボックス、信頼度、矩形の下辺中央、BBOX-to-BEV。}{あらかじめ指定した矩形で仕組みを確認し、サンプル検出結果または学習済みYOLO26を使う。最後に複数の選手の矩形をBEVへ投影する。}{25点}
+  \overviewitem{Day 3}{複数物体追跡、IoUによる対応付け、ByteTrack、Track ID、BEV軌跡、チーム分け。}{検出を追跡につなぎ、BEVへ投影する。胴体の切り出し画像とHSV色特徴を使い、Team AとTeam Bに分ける。}{20点}
+  \overviewitem{Day 4}{近距離のシュート映像、配布済みのシュート・姿勢・ボールのモデル、シュートイベント、リリース角度。}{Google DriveまたはColabから自分の映像を入力する。シュートする選手、人体の骨格、ボール軌跡を求め、リリースフレーム、関節角度、2次元の打ち出し角度を推定する。}{15点}
+  \overviewitem{Day 5}{研究課題、システム構成、評価計画、制約、技術内容の説明。}{各班がプロジェクトを提案するか、完成したバスケットボール映像分析の成果を実演する。}{20点}
+
+  \noindent
+  \begin{minipage}[t]{0.12\textwidth}\textbf{加点}\\[-0.5mm]{\scriptsize +10}\end{minipage}
+  \hfill
+  \begin{minipage}[t]{0.84\textwidth}{\scriptsize デモの改善、失敗例の分析、可視化の調整、追加映像の分析、または具体的な授業への意見を提出する。}\end{minipage}
+
+  \vspace{2mm}\hrule\vspace{1.5mm}
+  \hfill {\bfseries 合計：100点（加点は最大10点）}
+\end{tcolorbox}
+
+\clearpage
+
+\section{Day 1：Colab、キーポイントの対応付け、ホモグラフィ、アノテーション}
+\daybox{Colab、教材フォルダ、画像座標に慣れる。静止画像とBEV図の点を対応付け、ホモグラフィで画像座標を鳥瞰座標へ変換する。Roboflowのキーポイント・矩形アノテーションを学び、2日目に使う少量のデータを準備する。}{動作するColab、画像上の点と対応するBEV上の点、ホモグラフィ行列、1点の投影結果、キーポイント・矩形アノテーションの形式確認。}
+
+\vspace{1mm}
+\footnotesize
+\begin{xltabular}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\endfirsthead
+\hline
+\tasktableheader
+\endhead
+\checkbox & 1.1 & \typebadge{環境} & 教材リポジトリを開き、Colab、Google Drive、assets、srcへアクセスできることを確認する。 & \checks{\item COURSE\_ROOTとサンプル画像を表示できる。} & 3 \\ \hline
+\checkbox & 1.2 & \typebadge{座標} & BEVとカメラ画像のキーポイント対応ツールで点を対応付ける。 & \checks{\item 4組以上の対応点を作成できる。} & 4 \\ \hline
+\checkbox & 1.3 & \typebadge{BEV} & 各組のBEVキーポイント名と画像上の位置を確認する。 & \checks{\item 点数が一致し、各対応点の名前を説明できる。} & 3 \\ \hline
+\checkbox & 1.4 & \typebadge{変換} & cv2.findHomographyで行列を求め、指定した1点をBEVへ投影する。 & \checks{\item 行列と1点の投影結果の図を出力できる。} & 5 \\ \hline
+\checkbox & 1.5 & \typebadge{ラベル} & Roboflowのキーポイント・矩形アノテーション課題を確認し、少数の画像で練習する。 & \checks{\item 両課題の形式を確認できる。} & 5 \\ \hline
+\rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 1 小計}} & \textbf{20} \\ \hline
+\end{xltabular}
+\normalsize
+\vspace{3mm}
+\begin{projectfiles}
+\projectfile{day1/d1\_01\_keypoint\_pairing\_homography.ipynb}{画像とBEVの点を対応付け、ホモグラフィを求め、指定点をBEVへ投影する。}
+\projectfile{day1/d1\_02\_keypoint\_annotation\_roboflow\_lab.ipynb}{キーポイントの順序、データ形式、誤差の確認、発展課題としてのファインチューニングを学ぶ。}
+\projectfile{day1/d1\_03\_bbox\_homework.ipynb}{2日目に使うplayer、ball、rim、numberの矩形データとRoboflowのデータセット版を準備する。}
+\end{projectfiles}
+
+\clearpage
+\section{Day 2：検出結果の確認、YOLO26、BBOX-to-BEV}
+\daybox{本格的なモデル学習の前に、検出結果を矩形の集合として理解する。あらかじめ指定した選手の矩形で下辺中央の点を確認し、サンプル検出結果または教員の学習済みYOLO26を使う。最後に複数の選手の足元をBEVへ投影する。}{単独の矩形からのBEV投影、検出結果のプレビュー図、学習プレビューの理解、複数選手のBBOX-to-BEV投影。}
+
+\vspace{1mm}\footnotesize
+\begin{xltabular}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\endfirsthead
+\hline
+\tasktableheader
+\endhead
+\checkbox & 2.1 & \typebadge{矩形} & 指定済みの選手の矩形を使い、下辺中央を床上の位置の推定値とする。 & \checks{\item 矩形と下辺中央を描画できる。} & 4 \\ \hline
+\checkbox & 2.2 & \typebadge{投影} & 1日目のホモグラフィで、選手1人の足元をBEVへ投影する。 & \checks{\item 左に矩形、右にBEV上の点を並べた図を出力できる。} & 5 \\ \hline
+\checkbox & 2.3 & \typebadge{検出} & サンプル結果または学習済みのYOLO26／Ultralytics形式のモデルで、player、ball、rim、numberの検出を確認する。 & \checks{\item 検出結果のプレビュー図を出力できる。} & 6 \\ \hline
+\checkbox & 2.4 & \typebadge{データ} & Roboflowの矩形データと学習プレビューを確認し、データセット、クラス、信頼度、モデルの制約を理解する。 & \checks{\item 検出が失敗する原因を一つ説明できる。} & 4 \\ \hline
+\checkbox & 2.5 & \typebadge{統合} & 複数の選手の矩形から足元の点を求め、BEVへ投影する。 & \checks{\item 複数選手のBBOX-to-BEV図を出力できる。} & 6 \\ \hline
+\rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 2 小計}} & \textbf{25} \\ \hline
+\end{xltabular}
+\normalsize
+\vspace{3mm}
+\begin{projectfiles}
+\projectfile{day2/d2\_01\_yolo26\_detection.ipynb}{1日目のデータ準備を踏まえ、クラス、信頼度、矩形、短い映像の検出結果を読み取る。}
+\projectfile{day2/d2\_02\_yolo\_players\_to\_bev.ipynb}{複数の選手の矩形の下辺中央をBEVへ投影する。}
+\projectfile{day2/d2\_03\_bbox\_to\_bev\_integration.ipynb}{検出、コートのキーポイント、ホモグラフィ、BEV出力をフレームごとに統合する。}
+\end{projectfiles}
+
+\clearpage
+\section{Day 3：ByteTrack、複数物体追跡、BEV軌跡、チーム分け}
+\daybox{画像座標、ホモグラフィ、検出、追跡という3日間の位置データ分析を完成させる。IoUでフレーム間の対応を学び、ByteTrackのIDと軌跡を確認してBEVへ投影する。最後に胴体画像、HSVヒストグラム、K-meansで2チームに分ける。}{IoUヒートマップと対応線、IDと軌跡を表示した映像、BEV軌跡データ、チーム分けの結果図。}
+
+\vspace{1mm}\footnotesize
+\begin{xltabular}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\endfirsthead
+\hline
+\tasktableheader
+\endhead
+\checkbox & 3.1 & \typebadge{概念} & 連続する2フレームの矩形でIoUを求め、対応付けを理解する。 & \checks{\item IoU行列を出力し、対応を説明できる。} & 4 \\ \hline
+\checkbox & 3.2 & \typebadge{追跡} & ByteTrackの考え方または簡易追跡器で、複数フレームの検出にIDを付ける。 & \checks{\item Track ID付きの画像を出力できる。} & 5 \\ \hline
+\checkbox & 3.3 & \typebadge{軌跡} & IDごとに矩形の中心または足元の座標を整理し、移動経路を作る。 & \checks{\item tracksのJSONまたはDataFrameを出力できる。} & 4 \\ \hline
+\checkbox & 3.4 & \typebadge{BEV} & 追跡中の足元をBEVへ投影し、IDごとの経路を描く。 & \checks{\item BEVの軌跡図を出力できる。} & 5 \\ \hline
+\checkbox & 3.5 & \typebadge{分類} & 上半身を切り出し、HSV特徴とK-meansでTeam A/Bに分ける。Track IDと実際の選手の違いも考察する。 & \checks{\item 矩形、胴体画像、2次元特徴図、チーム結果を比較し、制約を一つ説明できる。} & 2 \\ \hline
+\rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 3 小計}} & \textbf{20} \\ \hline
+\end{xltabular}
+\normalsize
+\vspace{3mm}
+\begin{projectfiles}
+\projectfile{day3/d3\_01\_tracking\_concept\_iou\_association.ipynb}{IoU行列で、フレーム間の矩形の対応付けを理解する。}
+\projectfile{day3/d3\_02\_yolo\_bytetrack\_tracking.ipynb}{YOLOとByteTrackで、ID、短い軌跡、ライフサイクルの概要を確認する。}
+\projectfile{day3/d3\_03\_team\_clustering.ipynb}{胴体画像、HSVヒストグラム、2クラスタのK-meansで、チーム分けを可視化する。}
+\projectfile{day3/d3\_04\_tracking\_to\_bev\_mini\_project.ipynb}{ID、BEV軌跡、追跡単位のチーム分けを統合し、元画像のチーム別矩形、特徴の散布図、チーム色のBEV軌跡を出力する。}
+\end{projectfiles}
+
+\clearpage
+\section{Day 4：近距離のシュート映像、人体姿勢、ボール軌跡}
+\daybox{後半は近距離のシュート映像を扱う。スマートフォンで撮影し、Google Driveのassets/rawへ置くか、Day 4-01のColabアップロードセルで選択してMP4へ変換する。配布済みのシュート検出器、YOLO pose、ボール検出器を使い、候補スコア、手首位置、ボール軌跡からリリースフレーム、関節角度、2次元の打ち出し角度を推定する。}{変換済みのシュート映像、イベントCSV、姿勢角度CSV、イベント別のボール軌跡、角度グラフ、リリース確認画像、重ね描きした映像。}
+
+\vspace{1mm}\footnotesize
+\begin{xltabular}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\endfirsthead
+\hline
+\tasktableheader
+\endhead
+\checkbox & 4.1 & \typebadge{入力} & Google Driveのassets/rawへ映像を置くか、Day 4-01でUSE\_BROWSER\_UPLOAD=Trueにしてファイルを選ぶ。 & \checks{\item using videoに想定した変換済み映像が表示される。} & 3 \\ \hline
+\checkbox & 4.2 & \typebadge{変換} & ffmpegでMP4、30 FPS、長辺1280画素以下、音声なしに統一する。 & \checks{\item assets/convertedにMP4が生成される。} & 3 \\ \hline
+\checkbox & 4.3 & \typebadge{事象} & シュート検出器とYOLO poseで、シュートする選手と候補時間区間を特定する。 & \checks{\item フレームごとのシュートスコアと姿勢のDataFrameを出力できる。} & 3 \\ \hline
+\checkbox & 4.4 & \typebadge{角度} & 肘、膝、肩の角度を求め、リリースフレームのシュート側の関節角度を読み取る。 & \checks{\item 角度の変化とリリース時の関節角度を出力できる。} & 3 \\ \hline
+\checkbox & 4.5 & \typebadge{球軌跡} & 選手の手首付近からイベント専用のボール追跡を始め、リリースフレームと2次元の打ち出し角度を推定する。 & \checks{\item イベントCSV、打ち出し角度、目視確認用の図を出力できる。} & 3 \\ \hline
+\rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 4 小計}} & \textbf{15} \\ \hline
+\end{xltabular}
+\normalsize
+\vspace{3mm}
+\begin{projectfiles}
+\projectfile{day4/d4\_01\_ball\_detector\_bytetrack\_preview.ipynb}{自分の映像を準備し、配布済みのボール検出器とByteTrackで矩形とIDを確認する。}
+\projectfile{day4/d4\_02\_yolo\_pose\_and\_shot\_lab.ipynb}{シュート検出器とYOLO poseで、候補スコアとシュートする選手の姿勢角度を求める。}
+\projectfile{day4/d4\_03\_ball\_tracking\_and\_release\_point\_lab.ipynb}{イベント、手首、ボール軌跡を統合し、リリースフレーム、関節角度、2次元の打ち出し角度と確認図を出力する。}
+\end{projectfiles}
+
+\clearpage
+\section{Day 5：プロジェクト提案と完成成果の実演}
+\daybox{新しい定型の実装課題は追加しない。最初の4日間を踏まえ、実行・評価可能なバスケットボール映像分析を提案するか、完成した成果を実演する。課題、データ、手法に加え、根拠、制約、次の取り組みを説明する。}{6--10枚のスライド、1ページの概要、システム構成図、評価計画。提案では到達目標と予想結果、完成成果の実演では再現可能な出力も提出する。}
+
+\vspace{1mm}\footnotesize
+\begin{xltabular}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\endfirsthead
+\hline
+\tasktableheader
+\endhead
+\checkbox & 5.1 & \typebadge{課題} & 利用者、入力、出力、検証可能な研究・製品開発に関する問いを1--3個定める。 & \checks{\item モデル名の羅列ではなく、課題を明確に示す。} & 4 \\ \hline
+\checkbox & 5.2 & \typebadge{データ} & データの出所、ラベル、分割、利用許諾、前提とする処理を説明する。 & \checks{\item 完成済み、既存ツールの利用、計画中の内容を区別する。} & 3 \\ \hline
+\checkbox & 5.3 & \typebadge{手法} & 映像、検出、追跡、チーム・個人識別、BEV・姿勢・イベント、最終出力の流れを図示する。 & \checks{\item 各処理の入出力と主な仮定を説明できる。} & 4 \\ \hline
+\checkbox & 5.4 & \typebadge{根拠} & 提案では基準手法、指標、予想する図表を示す。完成成果では代表的な成功例と失敗例を示す。 & \checks{\item 評価方法が元の問いに答えている。} & 4 \\ \hline
+\checkbox & 5.5 & \typebadge{発表} & 制限時間内に発表し、図表、映像、ストーリーボードで結論を裏付ける。 & \checks{\item スライド、概要、必要な添付資料をそろえる。} & 3 \\ \hline
+\checkbox & 5.6 & \typebadge{考察} & 制約、リスク、誤差の伝播、優先順位を付けた次の取り組みを示す。 & \checks{\item 実行可能な追加実験を一つ以上提案する。} & 2 \\ \hline
+\rowcolor{LightBlue}\multicolumn{5}{|r|}{\textbf{Day 5 小計}} & \textbf{20} \\ \hline
+\end{xltabular}
+\normalsize
+\vspace{3mm}
+\begin{projectfiles}
+\projectfile{day5/project\_proposal\_spec.tex}{提案・完成成果の提出形式、発表時間、評価基準、テーマ例を確認する。}
+\projectfile{daily\_lecture\_outline.tex}{各日の冒頭1時間の講義概要。5日目は研究計画、評価、技術内容の説明を扱う。}
+\end{projectfiles}
+\par\small\textbf{原稿のファイル記載について：}\texttt{daily\_lecture\_outline.tex}は原稿に記載されているが、本リポジトリには含まれていない。理論の説明は、READMEに掲載した教材本文を参照する。\normalsize
+
+
+\clearpage
+\section{追加の加点課題}
+\footnotesize
+\begin{xltabular}{\textwidth}{|C{0.85cm}|C{1.2cm}|C{1.55cm}|Y|Y|C{0.75cm}|}\hline
+\tasktableheader
+\endfirsthead
+\hline
+\tasktableheader
+\endhead
+\checkbox & E.1 & \typebadge{改善} & 対応点の手動修正、ボールのしきい値調整、自分の映像の分析、結果図の改善などを行う。 & \checks{\item 追加の変更と、その結果を示す。} & +5 \\ \hline
+\checkbox & E.2 & \typebadge{意見} & ツール、難易度、教材、今後の発展について、具体的な意見や改善案を提出する。 & \checks{\item 具体的な意見または提案を提出する。} & +5 \\ \hline
+\rowcolor{WarnYellow}\multicolumn{5}{|r|}{\textbf{追加の加点}} & \textbf{+10} \\ \hline
+\end{xltabular}
+\normalsize
+
+\end{document}

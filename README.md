@@ -9,6 +9,20 @@
 - Day 5：以 Proposal 或完成專案 Demo 報告整合所學，說明問題、方法、評估、限制與延伸方向。
 - Notebook 保留主要實作流程；`src/` 放置重複使用的工具函式。
 
+## 教材下載與語言版本
+
+| 文件 | 繁體中文 | 日本語 | English |
+| --- | --- | --- | --- |
+| 完整課程教材 | [PDF](output/pdf/python_basketball_hackathon_course_material.pdf) · [LaTeX](python_basketball_hackathon_course_material.tex) | [PDF](output/pdf/python_basketball_hackathon_course_material_ja.pdf) · [LaTeX](python_basketball_hackathon_course_material_ja.tex) | [PDF](output/pdf/python_basketball_hackathon_course_material_en.pdf) · [LaTeX](python_basketball_hackathon_course_material_en.tex) |
+| 五日時間表與任務評量 | [PDF](output/pdf/workshop_schedule_updated.pdf) · [LaTeX](workshop_schedule_updated.tex) | [PDF](output/pdf/workshop_schedule_updated_ja.pdf) · [LaTeX](workshop_schedule_updated_ja.tex) | [PDF](output/pdf/workshop_schedule_updated_en.pdf) · [LaTeX](workshop_schedule_updated_en.tex) |
+| Day 5 專題提案與成果展示說明 | [PDF](output/pdf/day5_project_proposal_spec.pdf) · [LaTeX](day5/project_proposal_spec.tex) | [PDF](output/pdf/day5_project_proposal_spec_ja.pdf) · [LaTeX](day5/project_proposal_spec_ja.tex) | [PDF](output/pdf/day5_project_proposal_spec_en.pdf) · [LaTeX](day5/project_proposal_spec_en.tex) |
+
+日文與英文版已逐段對照中文原稿校閱，並核對任務編號、配分、報告時間、繳交要求、公式及檔案路徑。時間表每日配分合計為 100 分，另有最多 10 分加分；Day 5 說明中的 100 分規準是專題本身的評分尺度。
+
+原時間表與下方課程說明提及的 `daily_lecture_outline.tex` 尚未附於本儲存庫，兩種譯本已註明。理論、公式與演算法說明可參閱上表的完整課程教材；Notebook 仍以目前的中文版本為主。
+
+譯本以 Tectonic 0.15.0 編譯並檢查 PDF 頁面。LaTeX 原稿使用 macOS 的 Helvetica Neue、Menlo 與 Hiragino Sans W3/W6；其他作業系統需先改用可用的對應字型。
+
 ## 本機環境
 
 本專案使用 `uv` 管理 Python 環境與 notebook 驗證工具；Apple Silicon macOS 已用 PyTorch MPS（Metal GPU）驗證。NVIDIA 機器則會自動使用 CUDA，沒有 GPU 時才退回 CPU。

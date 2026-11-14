@@ -1,0 +1,191 @@
+% !TeX program = xelatex
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=0.85in]{geometry}
+\usepackage{iftex}
+\ifXeTeX\else
+  \PackageError{project-proposal}{This document requires XeLaTeX}{Compile with xelatex.}
+\fi
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setmainfont{Helvetica Neue}
+\setsansfont{Helvetica Neue}
+\setmonofont{Menlo}
+\setCJKmainfont{Hiragino Sans W3}[BoldFont=Hiragino Sans W6]
+\setCJKsansfont{Hiragino Sans W3}[BoldFont=Hiragino Sans W6]
+\setCJKmonofont{Hiragino Sans W3}[BoldFont=Hiragino Sans W6]
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{amsmath,amssymb}
+\usepackage[table]{xcolor}
+\usepackage{tabularx,xltabular,needspace}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+\usepackage[bookmarks=false,hidelinks]{hyperref}
+
+\definecolor{Main}{HTML}{222222}
+\definecolor{Soft}{HTML}{F4F4F4}
+\definecolor{Rule}{HTML}{666666}
+\definecolor{Accent}{HTML}{DDEBF7}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45\baselineskip}
+\renewcommand{\arraystretch}{1.2}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}m{#1}}
+\titleformat{\section}{\Large\bfseries\color{Main}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\color{Main}}{}{0pt}{}
+\newcommand{\checkbox}{\(\square\)}
+
+\begin{document}
+
+\begin{center}
+  {\LARGE\bfseries Day 5: Basketball Vision Analysis\\Project Proposals and Demonstrations}\\[5pt]
+  {\large Requirements for Proposals and Completed Project Demonstrations}\\[8pt]
+  \rule{0.92\textwidth}{0.6pt}
+\end{center}
+
+\begin{tcolorbox}[colback=Soft,colframe=Rule,arc=1mm,boxrule=0.5pt]
+\textbf{Purpose of Day 5}\quad
+No new prescribed notebook exercise is introduced. Use what you learned in Days 1--4 to propose a worthwhile research or product project, or demonstrate a completed project. Explain the problem, the flow of data, how results will be validated and the current limitations. The number of models used is not the main assessment criterion.
+\end{tcolorbox}
+
+\section{1. Presentation Options}
+
+Choose one of the following formats. Both are assessed using the same core criteria.
+
+\subsection{1.1 Project Proposal}
+
+For groups that have not yet completed a system but can define a clear problem, technical approach and validation plan. Explain why the problem matters, how the data can be obtained, why the approach is feasible and how results can be evaluated objectively.
+
+\subsection{1.2 Completed Project Demonstration}
+
+For groups with a working result. In addition to the live demonstration, explain the problem, data, methods, evaluation and limitations. A single successful video clip does not establish that the system generalizes.
+
+\section{2. Prerequisite Modules You May Assume}
+
+A proposal may assume the following capabilities are available; you do not need to rebuild every module within the limited time. Clearly label completed work, reused tools and future work in the slides.
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item Detection of players, basketballs, rims and court keypoints.
+  \item ByteTrack or another multi-object tracker, with track IDs for each frame.
+  \item Homography and BEV projection of player footpoints.
+  \item Team clustering or supervised team classification.
+  \item Jersey-number recognition, OCR or matching against a player roster.
+  \item Human pose, joint angles, ball trajectories and release-time estimation.
+  \item Manual event annotations, game play-by-play records or other external data.
+\end{itemize}
+
+\begin{tcolorbox}[colback=Accent,colframe=Rule,arc=1mm,boxrule=0.45pt]
+\textbf{Label implementation status accurately}\quad
+Assuming a module is available does not turn its expected output into experimental evidence. Use different line styles or colors in the architecture diagram to distinguish your implementation, existing external modules and planned modules.
+\end{tcolorbox}
+
+\section{3. Required Presentation Content}
+
+\subsection{3.1 Problem and Use Case}
+
+\begin{enumerate}[leftmargin=1.8em,label=\arabic*.,itemsep=3pt]
+  \item Define the problem in one sentence: the inputs, intended outputs and who will use the results.
+  \item Identify the intended users, such as coaches, players, analysts, broadcasters or researchers.
+  \item State one to three answerable research or product questions. ``Use AI to analyze basketball'' is too broad.
+\end{enumerate}
+
+\subsection{3.2 Data and Annotation}
+
+Specify video sources, camera views, resolution, dataset size, permissions, privacy considerations and required ground-truth annotations. If data has not yet been collected, explain how it will be collected and split. Split by game so that footage from one game cannot appear in both the training and test sets.
+
+\subsection{3.3 Methods and Data Flow}
+
+Include at least one architecture diagram from raw input to final output. For every module, explain:
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item The input data fields.
+  \item The output data fields.
+  \item Main assumptions and likely causes of failure.
+  \item Whether errors propagate to the next module and how they can be checked.
+\end{itemize}
+
+\subsection{3.4 Evaluation Design}
+
+Choose metrics that address the question. Examples include:
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item Detection: precision, recall, mAP and error analysis by object size.
+  \item Tracking: IDF1, HOTA, ID switches and track coverage.
+  \item Team/jersey: accuracy, confusion matrix and unknown/reject rate.
+  \item BEV: reprojection error, court-distance error and position stability.
+  \item Pose/events: angle error, timing error and event precision/recall.
+  \item Product demonstration: task completion time, accuracy of user interpretation or specific user feedback.
+\end{itemize}
+
+Include at least one success and one failure case. For proposals, sketch the expected charts to show how results will be presented when the experiments are conducted.
+
+\subsection{3.5 Limitations, Risks and Next Steps}
+
+Discuss occlusion, viewing angle, lighting, similar jerseys, small balls, ID switches and dataset bias. If using real player data, also address privacy, permissions and the risk of unsupported inferences. Finish with feasible, prioritized next steps.
+
+\section{4. Suggested Presentation Timing}
+
+\begin{xltabular}{\textwidth}{|C{2.0cm}|Y|C{2.2cm}|}\hline
+\rowcolor{Main}\textcolor{white}{\textbf{Elapsed time}} & \textcolor{white}{\textbf{Content}} & \textcolor{white}{\textbf{Slides}} \\ \hline
+\endfirsthead
+\hline
+\rowcolor{Main}\textcolor{white}{\textbf{Elapsed time}} & \textcolor{white}{\textbf{Content}} & \textcolor{white}{\textbf{Slides}} \\ \hline
+\endhead
+0:00--0:45 & Problem, users and why the problem matters & 1--2 \\ \hline
+0:45--1:30 & Data, inputs, outputs and prerequisites & 1--2 \\ \hline
+1:30--3:00 & Methods, architecture and key principles & 2--3 \\ \hline
+3:00--4:15 & Demonstration, or expected results and experiment design & 2--3 \\ \hline
+4:15--5:00 & Evaluation, failures, limitations and next steps & 1--2 \\ \hline
+5:00--7:00 & Questions and answers; the teaching team may adjust this to class size & --- \\ \hline
+\end{xltabular}
+
+\section{5. Submission Checklist}
+
+\begin{itemize}[leftmargin=1.6em,itemsep=4pt]
+  \item \checkbox\ Slides in PDF format: 6--10 slides recommended, excluding appendices.
+  \item \checkbox\ A one-page summary of the problem, inputs, outputs, methods, evaluation and limitations.
+  \item \checkbox\ An architecture or data-flow diagram that clearly marks each module's implementation status.
+  \item \checkbox\ Proposal: experiment plan, milestones and sketches of expected results.
+  \item \checkbox\ Completed demonstration: code or notebooks, execution instructions and representative outputs.
+  \item \checkbox\ References and sources for external models, datasets and packages used.
+\end{itemize}
+
+\section{6. Assessment Rubric: 100 Points}
+
+\begin{xltabular}{\textwidth}{|Y|C{1.5cm}|Y|}\hline
+\rowcolor{Main}\textcolor{white}{\textbf{Criterion}} & \textcolor{white}{\textbf{Points}} & \textcolor{white}{\textbf{What is assessed}} \\ \hline
+\endfirsthead
+\hline
+\rowcolor{Main}\textcolor{white}{\textbf{Criterion}} & \textcolor{white}{\textbf{Points}} & \textcolor{white}{\textbf{What is assessed}} \\ \hline
+\endhead
+Problem definition and value & 15 & Clear inputs, outputs, users and research questions, beyond a list of technical terms. \\ \hline
+Data and feasibility & 15 & Reasonable sources, annotations, splits, permissions and prerequisite assumptions. \\ \hline
+Methods and principles & 20 & A complete architecture with clear module relationships, principles and error propagation. \\ \hline
+Evaluation design or experimental evidence & 20 & Metrics address the question and include baselines, successes and failures. Demonstrations do not show only the best clips. \\ \hline
+Visualization and communication & 15 & Figures answer the question, terms are explained, and non-specialists can follow the presentation. \\ \hline
+Limitations, risks and next steps & 10 & Candid limitations and concrete improvements in priority order. \\ \hline
+Questions and teamwork & 5 & Evidence-based answers, clear responsibilities and appropriate time management. \\ \hline
+\end{xltabular}
+
+\section{7. Suggested Project Topics}
+
+These are possible directions, not prescribed solutions:
+
+\begin{itemize}[leftmargin=1.6em,itemsep=3pt]
+  \item Automatically generate player BEV paths and offensive spacing reports.
+  \item Correct player identities by combining team, jersey number and track ID.
+  \item Analyze release points, body angles and ball paths on a synchronized timeline.
+  \item Propose research on detecting defensive mismatches, screens or specific tactical events.
+  \item Build a video-search interface for coaches, such as retrieving every shot attempt by a player.
+  \item Systematically compare detector and tracker limitations under occlusion and for small objects.
+\end{itemize}
+
+\vfill
+\begin{center}
+\small\textbf{Assessment principle: The audience should be able to follow the question through to the evidence. A list of model names is not sufficient.}
+\end{center}
+
+\end{document}
